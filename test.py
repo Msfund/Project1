@@ -2,6 +2,7 @@ import cx_Oracle
 import pandas as pd
 import numpy as np
 import h5py
+import re
 
 # CCommodityFuturesEODPrices：date vt preSettle open high low close volumn openinterest
 class GetFutureData:
@@ -58,48 +59,81 @@ class GetFutureData:
         maxoi = maxoi.reset_index()
         # 判断持仓量最大的合约是否为当月合约
         maxoi['check2'] = maxoi['TRADE_DT'].str[2:6] != maxoi['S_INFO_WINDCODE'].str[2:6]
-        
+
         dom_code = pd.DataFrame({})
         for i in range(len(maxoi)):
             if i == 0:
                 dom_code = pd.concat([dom_code, maxoi.loc[maxoi.index[i:i+1],'S_INFO_WINDCODE']],ignore_index=True)
                 continue
-            dom_code = pd.concat([dom_code, dom_code.iloc[i-1,:]],ignore_index=True) ###copy
+            dom_code = pd.concat([dom_code, dom_code.iloc[i-1,:]],ignore_index=True)
             if dom_code.iloc[i,0] != maxoi.iloc[i,1] and maxoi.check1[i] == True and maxoi.check2[i] == True:
                 dom_code.iloc[i,0] =  maxoi.iloc[i,1]
         dom_code['1'] = maxoi.TRADE_DT
         dom_code.columns = ['S_INFO_WINDCODE','TRADE_DT']
-        dom_data = dom_code.merge(trade_data, on=['TRADE_DT','S_INFO_WINDCODE'], how='left' ) ###
-        return dom_data
+        dom_data = dom_code.merge(trade_data, on=['TRADE_DT','S_INFO_WINDCODE'], how='left' )
         
+        # 获取 uplimit 和 downlimit
+        sql = '''select s_info_windcode,
+        s_info_maxpricefluct
+        from filesync.CFuturescontpro 
+        '''"where s_info_windcode LIKE'"+self.vt+'''%'
+        order by s_info_windcode'''
+        self.cursor.execute(sql)
+        limit_info = self.cursor.fetchall()
+        limit_info = pd.DataFrame(limit_info)
+        limit_info[2] = [int(re.findall(r"\d+\.?\d*",limit_info.iloc[i,1])[0]) for i in range(len(limit_info))]
+        del limit_info[1]
+        limit_info.columns=['S_INFO_WINDCODE','limit_ratio']
+        dom_data = dom_data.merge(limit_info,on='S_INFO_WINDCODE',how='left')
+        dom_data['uplimit'] = dom_data['S_DQ_PRESETTLE']*(1+0.01*dom_data['limit_ratio'])
+        dom_data['downlimit'] = dom_data['S_DQ_PRESETTLE']*(1-0.01*dom_data['limit_ratio'])
+
+        return dom_data
+
     def get_sub_data(self):
 
         trade_data = self.get_trade_data()
         trade_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE','S_DQ_OI'], ascending = [1,1,0], inplace = True)
-        
+
         # 找出持仓量次大的合约,判断是否为连续三天
         suboi = trade_data.groupby('TRADE_DT')['S_INFO_WINDCODE'].nth(1)
         lag1_check = suboi == suboi.shift(1)
         lag2_check = suboi == suboi.shift(2)
         suboi = pd.DataFrame({'S_INFO_WINDCODE':suboi, 'check1':lag1_check & lag2_check})
         suboi = suboi.reset_index()
-        
+
         sub_code = pd.DataFrame({})
         for i in range(len(suboi)):
             if i == 0:
                 sub_code = pd.concat([sub_code, suboi.loc[suboi.index[i:i+1],'S_INFO_WINDCODE']],ignore_index=True)
                 continue
-            sub_code = pd.concat([sub_code, sub_code.iloc[i-1,:]],ignore_index=True) ###copy
+            sub_code = pd.concat([sub_code, sub_code.iloc[i-1,:]],ignore_index=True)
             if sub_code.iloc[i,0] != suboi.iloc[i,1] and suboi.check1[i] == True:
                 sub_code.iloc[i,0] =  suboi.iloc[i,1]
         sub_code['1'] = suboi.TRADE_DT
         sub_code.columns = ['S_INFO_WINDCODE','TRADE_DT']
-        sub_data = sub_code.merge(trade_data, on=['TRADE_DT','S_INFO_WINDCODE'], how='left' ) ###
+        sub_data = sub_code.merge(trade_data, on=['TRADE_DT','S_INFO_WINDCODE'], how='left' )
+
+        # 获取 uplimit 和 downlimit
+        sql = '''select s_info_windcode,
+        s_info_maxpricefluct
+        from filesync.CFuturescontpro 
+        '''"where s_info_windcode LIKE'"+self.vt+'''%'
+        order by s_info_windcode'''
+        self.cursor.execute(sql)
+        limit_info = self.cursor.fetchall()
+        limit_info = pd.DataFrame(limit_info)
+        limit_info[2] = [int(re.findall(r"\d+\.?\d*",limit_info.iloc[i,1])[0]) for i in range(len(limit_info))]
+        del limit_info[1]
+        limit_info.columns=['S_INFO_WINDCODE','limit_ratio']
+        sub_data = sub_data.merge(limit_info,on='S_INFO_WINDCODE',how='left')
+        sub_data['uplimit'] = sub_data['S_DQ_PRESETTLE']*(1+0.01*sub_data['limit_ratio'])
+        sub_data['downlimit'] = sub_data['S_DQ_PRESETTLE']*(1-0.01*sub_data['limit_ratio'])
+        
         return sub_data
-    
+
 
 a = GetFutureData('IF','20170101','20171231')
 a.get_trade_data()
 a.get_dom_data()
-###
 a.get_sub_data()
