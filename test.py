@@ -101,4 +101,5 @@ class GetFutureData:
 a = GetFutureData('IF','20170101','20171231')
 a.get_trade_data()
 a.get_dom_data()
+###
 a.get_sub_data()
