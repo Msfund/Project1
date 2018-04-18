@@ -1,0 +1,190 @@
+import cx_Oracle
+import pandas as pd
+import numpy as np
+import h5py
+import re
+# CCommodityFuturesEODPrices：date vt preSettle open high low close volumn openinterest
+class GetFutureData:
+    """
+    本模块主要包含以下几个功能:
+    1.从wind获取数据
+    2.提取主力合约数据
+    3.提取次主力合约数据
+    4.计算复权因子
+    """
+    db = cx_Oracle.connect('fe','fe','192.168.100.22:1521/winddb')
+    cursor = db.cursor()
+    def __init__(self,vt,startdate,enddate):
+        self.vt = vt
+        self.startdate = startdate
+        self.enddate = enddate
+#------------------------------------------------------------------------------
+#定义查找列表
+    def define_ExchMarktList(self):
+        '''定义不同品种所属列表'''
+        exchmarkt = {}
+        exchmarkt['CFE'] = 'filesync.CIndexFuturesEODPrices'     # 中金所
+        exchmarkt['SHF'] = 'filesync.CCommodityFuturesEODPrices'     # 上期所 
+        exchmarkt['CZC'] = 'filesync.CCommodityFuturesEODPrices'     # 郑商所
+        exchmarkt['DCE'] = 'filesync.CCommodityFuturesEODPrices'       # 大商所
+        sql = '''select  s_info_windcode 
+        from filesync.CFuturesDescription '''"where s_info_windcode LIKE'"+vt+'''%' and rownum=1'''
+        cursor.execute(sql)
+        t = cursor.fetchall()
+        return exchmarkt[t[0][0][-3:]]
+#------------------------------------------------------------------------------
+#读取数据
+    def get_trade_data(self):
+        '''读取日交易数据'''
+        sql = '''select s_info_windcode,
+        trade_dt,
+        s_dq_presettle,
+        s_dq_open,
+        s_dq_high,
+        s_dq_low,
+        s_dq_close,
+        s_dq_volume,
+        s_dq_oi from '''+self.define_ExchMarktList()+'''
+        where trade_dt>= '''+self.startdate+' and trade_dt<= '+self.enddate+"and s_info_windcode LIKE'"+self.vt+'''%'  
+        and LENGTH(s_info_windcode)>=10 
+        order by trade_dt'''
+        cursor.execute(sql)
+        trade_data = cursor.fetchall()
+        trade_data = pd.DataFrame(trade_data)
+        trade_data.columns = [i[0] for i in cursor.description]
+        return trade_data
+#------------------------------------------------------------------------------
+# 查找退市数据
+    def future_delistdate(self):
+    # 获取合约退市日期
+    sql = '''select fs_info_sccode,
+    s_info_windcode,
+    s_info_listdate,
+    s_info_delistdate
+    from filesync.CFuturesDescription
+    where s_info_delistdate > '''+self.startdate+" and s_info_windcode LIKE'"+self.vt+'''%'order by s_info_windcode'''
+    self.cursor.execute(sql)
+    delistdate = pd.DataFrame(self.cursor.fetchall())
+    delistdate.columns = [i[0] for i in self.cursor.description]
+    return delistdate
+#------------------------------------------------------------------------------
+    def get_dom_data(self):
+
+        trade_data = get_trade_data()
+        trade_data['S_INFO_CODE']=pd.DataFrame([i[2:6] for i in trade_data['S_INFO_WINDCODE']])
+        trade_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE','S_DQ_OI'], ascending = [1,1,0], inplace = True)
+# 确认合约切换点
+        loca = ~(maxOI['S_INFO_CODE'] == maxOI['S_INFO_CODE'].shift(1)) 
+# 条件1：持仓量连续第一满3天        
+        # 找出持仓量最大的合约,判断是否为连续三天，这里check1为标记连续持仓量最大达三天
+        maxOI = trade_data.groupby('TRADE_DT').nth(0)
+        maxOI = maxOI.reset_index()
+        check1 = (maxOI['S_INFO_CODE'] == maxOI['S_INFO_CODE'].shift(-1)) & (maxOI['S_INFO_CODE'] == maxOI['S_INFO_CODE'].shift(-2))
+# 条件2：金融期货不会往回切换（比如12月先作为主力合约，那么11月不能成为主力合约）
+        # if语句中判断是否往回切换，这里check2为标记出现往回切换的合约
+        if self.define_ExchMarktList(self.vt) == 'filesync.CIndexFuturesEODPrices':
+            for i in range(len(maxOI['S_INFO_CODE'])):
+                if i !=0:
+                    check2.append(maxOI['S_INFO_CODE'][i]<maxOI['S_INFO_CODE'][:i].max())
+                else:
+                    check2 = [False,]
+        check2 = pd.Series(check2)
+# 条件3：主力合约切换时不会向当月合约切换
+        # 判断持仓量最大的合约是否为当月合约，这里chexk3标记当月合约的主力合约
+        temp = (pd.DataFrame([i for i in maxOI['S_INFO_CODE']]) == pd.DataFrame([i[-6:-2] for i in maxOI['TRADE_DT']]))
+        temp = np.array(temp)
+        temp = temp.tolist()
+        for i in range(len(temp)):
+            if i !=0:
+                check3.append(temp[i][0])
+            else:
+                check3 = [True,]
+        check3 = pd.Series(check3)
+# =============================================================================
+# # 条件4：如果出现合约退市仍作为主力合约的情况，那么顺延到下一个主力合约
+#   感觉不需要这部分,因为有交易数据的部分都不会退市
+         delistdate = self.delistdate()
+         delistdate['S_INFO_CODE']=pd.DataFrame([i[2:6] for i in delistdate['S_INFO_WINDCODE']])
+         maxOI = pd.merge(delistdate,maxOI,how = 'right',on = ['S_INFO_CODE'])
+         check4 = (maxOI['S_DQ_CLOSE'].astype(str) == 'nan')
+# =============================================================================
+# 条件合并
+        #输入满足条件1的换仓位
+        maxOI['S_INFO_WINDCODE1']=None
+        maxOI['S_INFO_WINDCODE1'].ix[(loca)&(check1)] = maxOI['S_INFO_WINDCODE'].ix[(loca)&(check1)]
+        #向后填充
+        maxOI['S_INFO_WINDCODE1'] = maxOI['S_INFO_WINDCODE1'].fillna(method = 'ffill')
+        #调试满足条件2
+        maxOI['S_INFO_WINDCODE1'].ix[check2]=None
+        #向前填充，主力合约向后递延
+        maxOI['S_INFO_WINDCODE1'] = maxOI['S_INFO_WINDCODE1'].fillna(method = 'bfill')
+        #调试满足条件3
+        maxOI['S_INFO_WINDCODE1'].ix[loca & check3]=None
+        #向前填充，主力合约向后递延
+        maxOI['S_INFO_WINDCODE1'] = maxOI['S_INFO_WINDCODE1'].fillna(method = 'bfill')
+        #调试满足条件4
+        maxOI['S_INFO_WINDCODE1'].ix[check4]=None
+        #向前填充，主力合约向后递延
+        maxOI['S_INFO_WINDCODE1'] = maxOI['S_INFO_WINDCODE1'].fillna(method = 'bfill')
+        dom_data = maxOI
+
+        return dom_data
+
+    def get_subdom_data(self):
+        trade_data = get_trade_data()
+        trade_data['S_INFO_CODE']=pd.DataFrame([i[2:6] for i in trade_data['S_INFO_WINDCODE']])
+        trade_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE','S_DQ_OI'], ascending = [1,1,0], inplace = True)
+# 确认合约切换点
+        loca = ~(subOI['S_INFO_CODE'] == subOI['S_INFO_CODE'].shift(1)) 
+# 条件1：持仓量连续第一满3天        
+        # 找出持仓量最大的合约,判断是否为连续三天，这里check1为标记连续持仓量最大达三天
+        subOI = trade_data.groupby('TRADE_DT').nth(1)
+        subOI = subOI.reset_index()
+        check1 = (subOI['S_INFO_CODE'] == subOI['S_INFO_CODE'].shift(-1)) & (subOI['S_INFO_CODE'] == subOI['S_INFO_CODE'].shift(-2))
+# 条件2：主力次主力合约不能为同一张合约
+        dom_data = get_dom_data()
+        sub
+        if self.define_ExchMarktList(self.vt) == 'filesync.CIndexFuturesEODPrices':
+            for i in range(len(subOI['S_INFO_CODE'])):
+                if i !=0:
+                    check2.append(subOI['S_INFO_CODE'][i]<subOI['S_INFO_CODE'][:i].max())
+                else:
+                    check2 = [False,]
+        check2 = pd.Series(check2)
+# =============================================================================
+# # 条件3：如果出现合约退市仍作为主力合约的情况，那么顺延到下一个主力合约
+#   感觉不需要这部分,因为有交易数据的部分都不会退市
+         delistdate = self.delistdate()
+         delistdate['S_INFO_CODE']=pd.DataFrame([i[2:6] for i in delistdate['S_INFO_WINDCODE']])
+         subOI = pd.merge(delistdate,subOI,how = 'right',on = ['S_INFO_CODE'])
+         check4 = (subOI['S_DQ_CLOSE'].astype(str) == 'nan')
+# =============================================================================
+# 条件合并
+        #输入满足条件1的换仓位
+        subOI['S_INFO_WINDCODE1']=None
+        subOI['S_INFO_WINDCODE1'].ix[(loca)&(check1)] = subOI['S_INFO_WINDCODE'].ix[(loca)&(check1)]
+        #向后填充
+        subOI['S_INFO_WINDCODE1'] = subOI['S_INFO_WINDCODE1'].fillna(method = 'ffill')
+        #调试满足条件2
+        subOI['S_INFO_WINDCODE1'].ix[check2]=None
+        #向前填充，主力合约向后递延
+        subOI['S_INFO_WINDCODE1'] = subOI['S_INFO_WINDCODE1'].fillna(method = 'bfill')
+        #调试满足条件3
+        subOI['S_INFO_WINDCODE1'].ix[check3]=None
+        #向前填充，主力合约向后递延
+        subOI['S_INFO_WINDCODE1'] = subOI['S_INFO_WINDCODE1'].fillna(method = 'bfill')
+        sub_data = subOI
+        return sub_data
+
+    def save_data(self):
+        f = h5py.File('C:\\users\\user\Desktop\\out.h5','w')
+        f.create_dataset('dataset1',data = get_dom_data())
+        f.create_dataset('dataset2',data = get_subdom_data())
+        f.close()
+
+
+a = GetFutureData('IF','20170101','20171231')
+# a.get_subdom_data()
+# a.get_dom_data()
+# a.save.data()
+
