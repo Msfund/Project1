@@ -1,4 +1,3 @@
-# -*- coding: UTF-8 -*-
 import cx_Oracle
 import pandas as pd
 import numpy as np
