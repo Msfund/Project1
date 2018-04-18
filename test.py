@@ -71,8 +71,34 @@ class GetFutureData:
         dom_code.columns = ['S_INFO_WINDCODE','TRADE_DT']
         dom_data = dom_code.merge(trade_data, on=['TRADE_DT','S_INFO_WINDCODE'], how='left' ) ###
         return dom_data
+        
+    def get_sub_data(self):
+
+        trade_data = self.get_trade_data()
+        trade_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE','S_DQ_OI'], ascending = [1,1,0], inplace = True)
+        
+        # 找出持仓量次大的合约,判断是否为连续三天
+        suboi = trade_data.groupby('TRADE_DT')['S_INFO_WINDCODE'].nth(1)
+        lag1_check = suboi == suboi.shift(1)
+        lag2_check = suboi == suboi.shift(2)
+        suboi = pd.DataFrame({'S_INFO_WINDCODE':suboi, 'check1':lag1_check & lag2_check})
+        suboi = suboi.reset_index()
+        
+        sub_code = pd.DataFrame({})
+        for i in range(len(suboi)):
+            if i == 0:
+                sub_code = pd.concat([sub_code, suboi.loc[suboi.index[i:i+1],'S_INFO_WINDCODE']],ignore_index=True)
+                continue
+            sub_code = pd.concat([sub_code, sub_code.iloc[i-1,:]],ignore_index=True) ###copy
+            if sub_code.iloc[i,0] != suboi.iloc[i,1] and suboi.check1[i] == True:
+                sub_code.iloc[i,0] =  suboi.iloc[i,1]
+        sub_code['1'] = suboi.TRADE_DT
+        sub_code.columns = ['S_INFO_WINDCODE','TRADE_DT']
+        sub_data = sub_code.merge(trade_data, on=['TRADE_DT','S_INFO_WINDCODE'], how='left' ) ###
+        return sub_data
     
 
 a = GetFutureData('IF','20170101','20171231')
 a.get_trade_data()
 a.get_dom_data()
+a.get_sub_data()
