@@ -92,7 +92,10 @@ class GetFutureData:
     def special_MarginRatio(self,list_uniq):
         '''如果合约找不到对应保证金，从CFuturescontpro表中再次查询'''
         '''list_uniq为series格式'''
-        list_uniq = str(tuple(list_uniq.tolist()))
+        if len(list_uniq) == 1:
+            list_uniq = "('"+list_uniq.tolist()[0]+"')"
+        else:
+            list_uniq = str(tuple(list_uniq.tolist()))
         sql='''select s_info_windcode,
         s_info_ftmargins
         from filesync.CFuturescontpro
@@ -107,12 +110,11 @@ class GetFutureData:
     def get_dom_data(self):
 
         trade_data = self.get_trade_data()
-        trade_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE','S_DQ_OI'], ascending = [1,1,0], inplace = True)
+        trade_data.sort_values(by = ['TRADE_DT','S_DQ_OI','S_INFO_WINDCODE'], ascending = [1,0,1], inplace = True)
         maxOI = trade_data.groupby('TRADE_DT').nth(0)
         maxOI = maxOI.reset_index()
-        maxOI1 = maxOI.copy()
         maxOI['S_INFO_WINDCODE1']=None
-        #因为切换至下一合约需要3天判断期，主力合约名向后移动3天
+        #如果为因为切换至下一合约需要3天判断期，主力合约名向后移动3天
         maxOI['S_INFO_WINDCODE'] = maxOI['S_INFO_WINDCODE'].shift(3)
         maxOI['S_INFO_WINDCODE'] = maxOI['S_INFO_WINDCODE'].fillna(method = 'bfill')
         # 确认合约切换点位置
@@ -141,7 +143,7 @@ class GetFutureData:
             
         # 条件3：主力合约切换时不会向当月合约切换
         # 判断持仓量最大的合约是否为当月合约，这里chexk3标记当月合约的主力合约
-        temp = (pd.DataFrame([i for i in maxOI['S_INFO_WINDCODE']]) == pd.DataFrame([i[-6:-2] for i in maxOI['TRADE_DT']]))
+        temp = (pd.DataFrame([i[2:6] for i in maxOI['S_INFO_WINDCODE']]) == pd.DataFrame([i[-6:-2] for i in maxOI['TRADE_DT']]))
         temp = np.array(temp)
         temp = temp.tolist()
         for i in range(len(temp)):
@@ -157,15 +159,15 @@ class GetFutureData:
         #  条件4：如果出现合约退市仍作为主力合约的情况，那么顺延到下一个主力合约
         delistdate = self.future_delistdate()
         maxOI = pd.merge(delistdate,maxOI,how = 'right',on = ['S_INFO_WINDCODE'])
-        check4 = (maxOI['TRADE_DT']>maxOI['S_INFO_DELISTDATE'])
+        check4 = (maxOI['TRADE_DT']>=maxOI['S_INFO_DELISTDATE'])
         #调试满足条件4
         maxOI['S_INFO_WINDCODE1'].ix[check4]=None
         #向前填充，主力合约向后递延
         maxOI['S_INFO_WINDCODE1'] = maxOI['S_INFO_WINDCODE1'].fillna(method = 'bfill')
-# 整理数据
+        # 整理数据
         del maxOI['S_INFO_WINDCODE']
         maxOI = maxOI.rename(columns = {'S_INFO_WINDCODE1':'S_INFO_WINDCODE'}) 
-        dom_data = pd.merge(maxOI[['S_INFO_WINDCODE','TRADE_DT']],maxOI1,how = 'left', on = ['S_INFO_WINDCODE','TRADE_DT'])
+        dom_data = pd.merge(maxOI[['S_INFO_WINDCODE','TRADE_DT']],trade_data,how = 'left', on = ['S_INFO_WINDCODE','TRADE_DT'])
         dom_data = self.get_limit_data(dom_data)
         dom_data = self.get_MarginRatio(dom_data)
         dom_data = self.get_adj_factor(dom_data)
@@ -174,10 +176,9 @@ class GetFutureData:
     def get_sub_data(self):
 
         trade_data = self.get_trade_data()
-        trade_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE','S_DQ_OI'], ascending = [1,1,0], inplace = True)
+        trade_data.sort_values(by = ['TRADE_DT','S_DQ_OI','S_INFO_WINDCODE'], ascending = [1,0,1], inplace = True)
         subOI = trade_data.groupby('TRADE_DT').nth(1)
         subOI = subOI.reset_index()
-        subOI1 = subOI.copy()
         subOI['S_INFO_WINDCODE2']=None
         #因为切换至下一合约需要3天判断期，主力合约名向后移动3天
         subOI['S_INFO_WINDCODE'] = subOI['S_INFO_WINDCODE'].shift(3)
@@ -200,22 +201,23 @@ class GetFutureData:
         subOI['S_INFO_WINDCODE2'].ix[check2]=None
         #向前填充，主力合约向后递延
         subOI['S_INFO_WINDCODE2'] = subOI['S_INFO_WINDCODE2'].fillna(method = 'bfill')
-        # 条件3：如果出现合约退市仍作为主力合约的情况，那么顺延到下一个主力合约
+        # # 条件3：如果出现合约退市仍作为主力合约的情况，那么顺延到下一个主力合约
         delistdate = self.future_delistdate()
         subOI = pd.merge(delistdate[['S_INFO_WINDCODE','S_INFO_LISTDATE','S_INFO_DELISTDATE']],subOI,how = 'right',on = ['S_INFO_WINDCODE'])
-        check3 = (subOI['TRADE_DT']>subOI['S_INFO_DELISTDATE'])
+        check3 = (subOI['TRADE_DT']>=subOI['S_INFO_DELISTDATE'])
         #调试满足条件3
         subOI['S_INFO_WINDCODE2'].ix[check3]=None
         #向前填充，主力合约向后递延
         subOI['S_INFO_WINDCODE2'] = subOI['S_INFO_WINDCODE2'].fillna(method = 'bfill')
-        # 整理数据 
+# 整理数据 
         del subOI['S_INFO_WINDCODE']
         subOI = subOI.rename(columns = {'S_INFO_WINDCODE2':'S_INFO_WINDCODE'})
-        sub_data = pd.merge(subOI[['S_INFO_WINDCODE','TRADE_DT']],subOI1,how = 'left', on = ['S_INFO_WINDCODE','TRADE_DT'])
+        subOI.sort_values(by = ['TRADE_DT'], ascending = [1], inplace = True)
+        sub_data = pd.merge(subOI[['S_INFO_WINDCODE','TRADE_DT']],trade_data,how = 'left', on = ['S_INFO_WINDCODE','TRADE_DT'])
         
-        sub_data = self.get_MarginRatio(sub_data)
-        sub_data = self.get_limit_data(sub_data)
-        sub_data = self.get_adj_factor(sub_data)
+        sub_data = a.get_MarginRatio(sub_data)
+        sub_data = a.get_limit_data(sub_data)
+        sub_data = a.get_adj_factor(sub_data)
         return sub_data
 #--------------------------------------------------------------------------------
     def get_limit_data(self,data):    # 获取 uplimit 和 downlimit
