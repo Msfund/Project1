@@ -45,6 +45,7 @@ class GetFutureData:
        trade_data = self.cursor.fetchall()
        trade_data = pd.DataFrame(trade_data)
        trade_data.columns = [i[0] for i in self.cursor.description]
+       trade_data = trade_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE'])
        return trade_data
 #------------------------------------------------------------------------------
 # 查找退市数据
