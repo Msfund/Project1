@@ -2,6 +2,7 @@ import cx_Oracle
 import pandas as pd
 import numpy as np
 import h5py
+import re
 
 # CCommodityFuturesEODPrices：date vt preSettle open high low close volumn openinterest
 class GetFutureData:
@@ -49,7 +50,7 @@ class GetFutureData:
 
     def get_dom_data(self):
 
-        trade_data = get_trade_data()
+        trade_data = self.get_trade_data()
         trade_data.sort_values(by = ['TRADE_DT','S_INFO_CODE','S_DQ_OI'], ascending = [1,1,0], inplace = True)
         # 找出持仓量最大的合约,判断是否为连续三天
         maxvol = trade_data.groupby('TRADE_DT')['S_INFO_CODE'].nth(1)
@@ -188,7 +189,7 @@ class GetFutureData:
 
 
 if __name__  ==  '__main__':
-    a = GetFutureData('AU','20170101','20171231')
+    a = GetFutureData('SR','20170101','20171231')
     trade_data = a.get_trade_data()
     dom_data = a.get_dom_data()
     sub_data = a.get_sub_data()
