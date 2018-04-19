@@ -157,8 +157,7 @@ class GetFutureData:
         subOI['S_INFO_WINDCODE2'].ix[check2]=None
         #向前填充，主力合约向后递延
         subOI['S_INFO_WINDCODE2'] = subOI['S_INFO_WINDCODE2'].fillna(method = 'bfill')
-# # 条件3：如果出现合约退市仍作为主力合约的情况，那么顺延到下一个主力合约
-#        delistdate = a.future_delistdate()
+        # 条件3：如果出现合约退市仍作为主力合约的情况，那么顺延到下一个主力合约
         delistdate = self.future_delistdate()
         subOI = pd.merge(delistdate[['S_INFO_WINDCODE','S_INFO_LISTDATE','S_INFO_DELISTDATE']],subOI,how = 'right',on = ['S_INFO_WINDCODE'])
         check3 = (subOI['TRADE_DT']>subOI['S_INFO_DELISTDATE'])
@@ -166,7 +165,7 @@ class GetFutureData:
         subOI['S_INFO_WINDCODE2'].ix[check3]=None
         #向前填充，主力合约向后递延
         subOI['S_INFO_WINDCODE2'] = subOI['S_INFO_WINDCODE2'].fillna(method = 'bfill')
-# 整理数据 
+        # 整理数据 
         del subOI['S_INFO_WINDCODE']
         subOI = subOI.rename(columns = {'S_INFO_WINDCODE2':'S_INFO_WINDCODE'})
         sub_data = pd.merge(subOI[['S_INFO_WINDCODE','TRADE_DT']],subOI1,how = 'left', on = ['S_INFO_WINDCODE','TRADE_DT'])
