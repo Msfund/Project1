@@ -61,6 +61,48 @@ class GetFutureData:
         delistdate = pd.DataFrame(self.cursor.fetchall())
         delistdate.columns = [i[0] for i in self.cursor.description]
         return delistdate
+#--------------------------------------------------------------------------------
+    def get_MarginRatio(self,data):
+        ## 获取保证金数据
+        sql = '''select
+        s_info_windcode,
+        marginratio,
+        trade_dt
+        from filesync.CFuturesmarginratio
+        '''"where s_info_windcode LIKE'"+self.vt+'''%'
+        order by s_info_windcode''' 
+        self.cursor.execute(sql)
+        Margin_data = pd.DataFrame(self.cursor.fetchall())
+        Margin_data.columns = [i[0] for i in self.cursor.description]
+        data = data.merge(Margin_data, on = ['S_INFO_WINDCODE','TRADE_DT'],how = 'left')
+        data['MARGINRATIO'] = data['MARGINRATIO'].fillna(method = 'ffill')
+        if sum(data.isnull()['MARGINRATIO']) != 0:
+            #标记未找到对应保证金数据的合约位置
+            null_contract = data.isnull()
+            list_null = data['S_INFO_WINDCODE'].ix[null_contract['MARGINRATIO']]
+            list_uniq = list_null[~list_null.duplicated()]
+            #找出一共多有多少品种无对应数据，以及输出品种合约名和其对应保证金数据
+            special_Margin = self.special_MarginRatio(list_uniq)
+            for i in range(len(special_Margin)):
+                data['MARGINRATIO'][list_uniq.index[i]] = special_Margin['MARGINRATIO'][i] #这里只对应品种第一次出现的缺失数据项
+            #再次填充
+            data['MARGINRATIO'] = data['MARGINRATIO'].fillna(method = 'ffill')
+        return data  
+#------------------------------------------------------------------------------
+    def special_MarginRatio(self,list_uniq):
+        '''如果合约找不到对应保证金，从CFuturescontpro表中再次查询'''
+        '''list_uniq为series格式'''
+        list_uniq = str(tuple(list_uniq.tolist()))
+        sql='''select s_info_windcode,
+        s_info_ftmargins
+        from filesync.CFuturescontpro
+        where s_info_windcode in'''+list_uniq+'''order by s_info_windcode'''
+        self.cursor.execute(sql)
+        special_Margin=pd.DataFrame(list(self.cursor.fetchall()))
+        special_Margin[2] = [int(re.findall(r"\d+\.?\d*",special_Margin.iloc[i,1])[0]) for i in range(len(special_Margin))]
+        del special_Margin[1]
+        special_Margin.columns=['S_INFO_WINDCODE','MARGINRATIO']
+        return special_Margin
 #------------------------------------------------------------------------------
     def get_dom_data(self):
 
@@ -175,7 +217,7 @@ class GetFutureData:
         sub_data = self.get_limit_data(sub_data)
         sub_data = self.get_adj_factor(sub_data)
         return sub_data
-
+#--------------------------------------------------------------------------------
     def get_limit_data(self,data):    # 获取 uplimit 和 downlimit
         sql = '''select s_info_windcode,
         s_info_maxpricefluct
@@ -192,7 +234,7 @@ class GetFutureData:
         data['uplimit'] = data['S_DQ_PRESETTLE']*(1+0.01*data['limit_ratio'])
         data['downlimit'] = data['S_DQ_PRESETTLE']*(1-0.01*data['limit_ratio'])
         return data
-
+#----------------------------------------------------------------------------------
     def get_adj_factor(self,data):
         # 计算调整因子
         loc = data['S_INFO_WINDCODE'].shift(-1) != data['S_INFO_WINDCODE']
@@ -228,12 +270,12 @@ class GetFutureData:
         data = data.sort_values(by = ['TRADE_DT'])
         data['adj_factor'] = data['adj_factor'].fillna(method = 'ffill')
         return data
-
+#---------------------------------------------------------------------------------------
     def save_data(self,path):
         dom_data.to_hdf(path,'dom_data')
         sub_data.to_hdf(path,'sub_data')
         
-        
+#---------------------------------------------------------------------------------------        
 if __name__  ==  '__main__':
     a = GetFutureData('IF','20170101','20171231')
     trade_data = a.get_trade_data()
