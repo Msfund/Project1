@@ -4,6 +4,11 @@ import numpy as np
 import h5py
 import re
 
+CFEcode = ('IF','IC','IH','TF','T')
+SHFcode = ('cu','al','zn','ru','fu','au','ag','rb','wr','pb','bu','hc','NI','SN')
+DCEcode = ('a','b','m','c','y','p','l','v','j','jm','i','jd','fb','bb','pp','cs')
+CZCcode = ('PM','WH','CF','SR','OI','TA','RI','LR','MA','FG','RS','RM','TC','ZC','JR','SF','SM')
+Allcode = CFEcode + SHFcode + DCEcode + CZCcode
 # CCommodityFuturesEODPrices：date vt preSettle open high low close volumn openinterest
 class GetFutureData:
 
@@ -14,39 +19,23 @@ class GetFutureData:
         db = cx_Oracle.connect('fe','fe','192.168.100.22:1521/winddb')
         self.cursor = db.cursor()
 
-    def define_ExchMarktList(self):
-        '''定义不同品种所属列表'''
-        exchmarkt = {}
-        exchmarkt['CFE'] = 'filesync.CIndexFuturesEODPrices'         # 中金所
-        exchmarkt['SHF'] = 'filesync.CCommodityFuturesEODPrices'     # 上期所
-        exchmarkt['CZC'] = 'filesync.CCommodityFuturesEODPrices'     # 郑商所
-        exchmarkt['DCE'] = 'filesync.CCommodityFuturesEODPrices'     # 大商所
-        sql = '''select  s_info_windcode
-        from filesync.CFuturesDescription '''"where s_info_windcode LIKE'"+self.vt+'''%' and rownum=1'''
-        self.cursor.execute(sql)
-        t = self.cursor.fetchall()
-        return exchmarkt[t[0][0][-3:]]  #例如'IF1003.CFE'返回的是exchmarkt['CFE']的值
-
     def get_trade_data(self):
-       '''读取日交易数据'''
-       sql = '''select s_info_windcode,
-       trade_dt,
-       s_dq_presettle,
-       s_dq_open,
-       s_dq_high,
-       s_dq_low,
-       s_dq_close,
-       s_dq_volume,
-       s_dq_oi from '''+self.define_ExchMarktList()+'''
-       where trade_dt>= '''+self.startdate+' and trade_dt<= '+self.enddate+"and s_info_windcode LIKE'"+self.vt+'''%'
-       and LENGTH(s_info_windcode)>=10
-       order by trade_dt'''
-       self.cursor.execute(sql)
-       trade_data = self.cursor.fetchall()
-       trade_data = pd.DataFrame(trade_data)
-       trade_data.columns = [i[0] for i in self.cursor.description]
-       trade_data = trade_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE'])
-       return trade_data
+        if self.vt in CFEcode:
+            exchmarkt = 'filesync.CIndexFuturesEODPrices'
+        else:
+            exchmarkt = 'filesync.CCommodityFuturesEODPrices'
+        sql = '''select s_info_windcode,trade_dt,
+        s_dq_presettle,s_dq_open,s_dq_high,s_dq_low,s_dq_close,s_dq_volume,s_dq_oi 
+        from '''+exchmarkt+'''
+        where trade_dt>= '''+self.startdate+''' and trade_dt<= '''+self.enddate+''' 
+        and s_info_windcode LIKE \''''+self.vt+'''%\' and LENGTH(s_info_windcode)>=9
+        order by trade_dt'''
+        self.cursor.execute(sql)
+        trade_data = self.cursor.fetchall()
+        trade_data = pd.DataFrame(trade_data)
+        trade_data.columns = [i[0] for i in self.cursor.description]
+        trade_data = trade_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE'])
+        return trade_data
 #------------------------------------------------------------------------------
 # 查找退市数据
     def future_delistdate(self):
