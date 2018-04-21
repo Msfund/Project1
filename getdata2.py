@@ -25,10 +25,10 @@ class GetFutureData:
         else:
             exchmarkt = 'filesync.CCommodityFuturesEODPrices'
         sql = '''select s_info_windcode,trade_dt,
-        s_dq_presettle,s_dq_open,s_dq_high,s_dq_low,s_dq_close,s_dq_volume,s_dq_oi 
+        s_dq_presettle,s_dq_open,s_dq_high,s_dq_low,s_dq_close,s_dq_volume,s_dq_oi
         from '''+exchmarkt+'''
-        where trade_dt>= '''+self.startdate+''' and trade_dt<= '''+self.enddate+''' 
-        and s_info_windcode LIKE \''''+self.vt+'''%\' and LENGTH(s_info_windcode)>=9
+        where trade_dt>= '''+self.startdate+' and trade_dt<= '+self.enddate+"and s_info_windcode LIKE '"+self.vt+'''%'
+        and LENGTH(s_info_windcode)>=9
         order by trade_dt'''
         self.cursor.execute(sql)
         trade_data = self.cursor.fetchall()
