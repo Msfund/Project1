@@ -51,12 +51,12 @@ class GetFutureData:
             # 商品期货满足最大持仓量满3天
             FSlag1check = subOI.shift(1) == maxOI
             FSlag2check = subOI.shift(2) == maxOI
-            FScheck = [FSlag1check,FSlag2check].any(axis=1)
+            FScheck = pd.concat([FSlag1check,FSlag2check], axis=1).any() ###
             dom_code[FScheck] = None
             dom_code = dom_code.fillna(method = 'ffill')
             STlag1check = thiOI.shift(1) == subOI
             STlag2check = thiOI.shift(1) == subOI
-            STcheck = [STlag1check,STlag2check].any(axis=1)
+            STcheck = pd.concat([STlag1check,STlag2check], axis=1).any() ###
             dom_code[STcheck] = None
             sub_code = sub_code.fillna(method = 'ffill')
         dom_code = dom_code.get_adj_factor(dom_code)
@@ -66,11 +66,11 @@ class GetFutureData:
     def get_adj_factor(self,code):
         lead = code['S_INFO_WINDCODE'].shift(-1) != code['S_INFO_WINDCODE']
         lag = code['S_INFO_WINDCODE'].shift(1) != code['S_INFO_WINDCODE']
-        temp = code[lead].merge(code['S_INFO_WINDCODE'][lag])
-        ### rename 'S_INFO_WINDCODE_x'=old 'S_INFO_WINDCODE_y'=new
+        temp = code[lead].merge(code[lag][['S_INFO_WINDCODE']])
+        temp.rename(columns={'S_INFO_WINDCODE_x':'old','S_INFO_WINDCODE_y':'new'})
         temp.merge(self.trade_data['S_DQ_CLOSE'],left_on='old',right_on='S_INFO_WINDCODE',inplace=True)
         temp.merge(self.trade_data['S_DQ_CLOSE'],left_on='new',right_on='S_INFO_WINDCODE',inplace=True)
-        ### rename 'S_DQ_CLOSE_x'=oldclose 'S_DQ_CLOSE_y'=newclose
+        temp.rename(columns={'S_DQ_CLOSE_x':'oldclose','S_DQ_CLOSE_y':'newclose'})
         temp['adj_factor'] = temp['oldclose'] / temp['newclose']
         code['adj_factor'] = None
         code[lag]['adj_factor'] = temp['adj_factor']
