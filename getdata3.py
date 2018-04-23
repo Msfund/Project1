@@ -10,7 +10,7 @@ DCEcode = ('A','B','M','C','Y','P','L','V','J','I','JM','JD','FB','BB','PP','CS'
 CZCcode = ('PM','WH','CF','SR','OI','TA','RI','LR','MA','FG','RS','RM','TC','ZC','JR','SF','SM')
 Allcode = CFEcode + SHFcode + DCEcode + CZCcode
 # CCommodityFuturesEODPrices：date vt preSettle open high low close volumn openinterest
-class GetFutureData:
+class HisDayData:
 
     def __init__(self,vt,startdate,enddate):
         self.vt = vt
@@ -18,9 +18,9 @@ class GetFutureData:
         self.enddate = enddate
         db = cx_Oracle.connect('fe','fe','192.168.100.22:1521/winddb')
         self.cursor = db.cursor()
-        self.trade_data = self.get_trade_data()
+        self.trade_data = self.GetRawData()
 
-    def get_trade_data(self):
+    def GetRawData(self):
         if self.vt in CFEcode:
             exchmarkt = 'filesync.CIndexFuturesEODPrices'
         else:
@@ -44,8 +44,8 @@ class GetFutureData:
         trade_data = trade_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE'])
         return trade_data
 
-    def get_code(self):
-        trade_data = self.get_trade_data()
+    def GetStitchRule(self):
+        trade_data = self.GetRawData()
         trade_sort = trade_data.sort_values(by = ['TRADE_DT','S_DQ_OI','S_INFO_WINDCODE'], ascending = [1,0,1])
         # 取持仓量前三合约的时间、代码 maxOI subOI thiOI
         maxOI = trade_sort.groupby('TRADE_DT').nth(0).reset_index()[['TRADE_DT','S_INFO_WINDCODE']]
@@ -109,12 +109,12 @@ class GetFutureData:
         return code
 
     def save_code(self,path):
-        dom_code,sub_code = self.get_code()
+        dom_code,sub_code = self.GetStitchRule()
         dom_code.to_hdf(path,'dom_code')
         sub_code.to_hdf(path,'sub_code')
 
 if __name__  ==  '__main__':
-    a = GetFutureData('IF','20150101','20171231')
-    trade_data = a.get_trade_data()
-    dom_code, sub_code = a.get_code()
+    a = HisDayData('IF','20150101','20171231')
+    trade_data = a.GetRawData()
+    dom_code, sub_code = a.GetStitchRule()
     # a.save_code('C:\\users\\user\\Desktop\\out1.h5')
