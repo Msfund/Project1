@@ -18,6 +18,7 @@ class GetFutureData:
         self.enddate = enddate
         db = cx_Oracle.connect('fe','fe','192.168.100.22:1521/winddb')
         self.cursor = db.cursor()
+        self.trade_data = self.get_trade_data()
 
     def get_trade_data(self):
         if self.vt in CFEcode:
@@ -59,22 +60,28 @@ class GetFutureData:
             STcheck = pd.concat([STlag1check,STlag2check], axis=1).any() ###
             dom_code[STcheck] = None
             sub_code = sub_code.fillna(method = 'ffill')
-        dom_code = dom_code.get_adj_factor(dom_code)
-        sub_code = sub_code.get_adj_factor(sub_code)
-        return dom_code sub_code
+        dom_code = self.get_adj_factor(dom_code)
+        sub_code = self.get_adj_factor(sub_code)
+        return dom_code,sub_code
 
     def get_adj_factor(self,code):
         lead = code['S_INFO_WINDCODE'].shift(-1) != code['S_INFO_WINDCODE']
         lag = code['S_INFO_WINDCODE'].shift(1) != code['S_INFO_WINDCODE']
-        temp = code[lead].merge(code[lag][['S_INFO_WINDCODE']])
-        temp.rename(columns={'S_INFO_WINDCODE_x':'old','S_INFO_WINDCODE_y':'new'})
-        temp.merge(self.trade_data['S_DQ_CLOSE'],left_on='old',right_on='S_INFO_WINDCODE',inplace=True)
-        temp.merge(self.trade_data['S_DQ_CLOSE'],left_on='new',right_on='S_INFO_WINDCODE',inplace=True)
-        temp.rename(columns={'S_DQ_CLOSE_x':'oldclose','S_DQ_CLOSE_y':'newclose'})
-        temp['adj_factor'] = temp['oldclose'] / temp['newclose']
+        lead.iloc[-1] = False
+        lag.iloc[0] = False
+        temp1 = pd.concat([code[lead].reset_index().drop(columns='index'),code[lag].reset_index().drop(columns=['index','TRADE_DT'])],axis=1)
+        temp1.columns = ['TRADE_DT','old','new'] 
+        temp2 = temp1.merge(self.trade_data[['TRADE_DT','S_INFO_WINDCODE','S_DQ_CLOSE']],left_on=['TRADE_DT','old'],right_on=['TRADE_DT','S_INFO_WINDCODE'])
+        del temp2['S_INFO_WINDCODE']
+        temp2 = temp2.rename(columns={'S_DQ_CLOSE':'oldclose'})
+        temp3 = temp2.merge(self.trade_data[['TRADE_DT','S_INFO_WINDCODE','S_DQ_CLOSE']],left_on=['TRADE_DT','new'],right_on=['TRADE_DT','S_INFO_WINDCODE'])
+        del temp3['S_INFO_WINDCODE']
+        temp3 = temp3.rename(columns={'S_DQ_CLOSE':'newclose'})
+        temp3['adj_factor'] = temp3['oldclose'] / temp3['newclose']
         code['adj_factor'] = None
-        code[lag]['adj_factor'] = temp['adj_factor']
-        code = code.fillna(methond = 'ffill')
+        temp3.index = code[lag][['adj_factor']].index
+        code[['adj_factor']] = temp3[['adj_factor']]
+        code = code.fillna(method = 'ffill')
         code = code.fillna(value = 1) # 第一个调整因子为1
         return code
 
@@ -84,7 +91,7 @@ class GetFutureData:
         sub_code.to_hdf(path,'sub_code')
 
 if __name__  ==  '__main__':
-    a = GetFutureData('SR','20170101','20171231')
+    a = GetFutureData('IF','20170101','20171231')
     trade_data = a.get_trade_data()
     dom_code, sub_code = a.get_code()
     # a.save_code('C:\\users\\user\\Desktop\\out1.h5')
