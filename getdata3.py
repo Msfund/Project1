@@ -63,9 +63,9 @@ class HisDayData:
             dom_code = dom_code.fillna(method = 'ffill')
             sub_code = sub_code.fillna(method = 'ffill')
             # sub_code平滑处理
-            smoothcheck = pd.concat([sub_code['S_INFO_WINDCODE'].shift(1) != sub_code['S_INFO_WINDCODE'],sub_code['S_INFO_WINDCODE'].shift(-1) != sub_code['S_INFO_WINDCODE']], axis=1).all(axis=1)
-            sub_code[smoothcheck] = None
-            sub_code = sub_code.fillna(method = 'bfill')
+            # smoothcheck = pd.concat([sub_code['S_INFO_WINDCODE'].shift(1) != sub_code['S_INFO_WINDCODE'],sub_code['S_INFO_WINDCODE'].shift(-1) != sub_code['S_INFO_WINDCODE']], axis=1).all(axis=1)
+            # sub_code[smoothcheck] = None
+            # sub_code = sub_code.fillna(method = 'bfill')
         else:
             # 商品期货满足最大持仓量满 3天
             FSlag1check = subOI.shift(1) == maxOI
