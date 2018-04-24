@@ -108,13 +108,17 @@ class HisDayData:
         code = code.fillna(value = 1) # 第一个调整因子为1
         return code
 
-    def save_code(self,path):
-        dom_code,sub_code = self.GetStitchRule()
-        dom_code.to_hdf(path,'dom_code')
-        sub_code.to_hdf(path,'sub_code')
+    def GetStitchData(self):
+        # 读RawData
+        # 载Rule
+        dom_code, sub_code = self.GetStitchRule()
+        # stich
+
+        return StitchData
+
 
 if __name__  ==  '__main__':
     a = HisDayData('IF','20150101','20171231')
     trade_data = a.GetRawData()
     dom_code, sub_code = a.GetStitchRule()
-    # a.save_code('C:\\users\\user\\Desktop\\out1.h5')
+    StitchData = a.GetStitchData()
