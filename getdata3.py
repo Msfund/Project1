@@ -42,7 +42,7 @@ class HisDayData:
         trade_data.columns = [i[0] for i in self.cursor.description]
         trade_data = trade_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE'])
         if save_hdf == True:
-            HDFutility(self.excode, self.vt, self.startdate, self.enddate, path).HDFwrite(trade_data,'1d')
+            HDFutility(path,self.excode, self.vt, self.startdate, self.enddate).HDFwrite(trade_data,'1d')
         return trade_data
 
     def future_delistdate(self):
@@ -190,7 +190,12 @@ class HisDayData:
 
 
 if __name__  ==  '__main__':
-    a = HisDayData('CFE','IF','20150101','20171231')
-    trade_data = a.GetRawData()
-    dom_code, sub_code = a.GetStitchRule()
-    dom_data, sub_data = a.GetStitchData()
+    a = HisDayData('CFE','IF','20170101','20171231')
+    trade_data = a.GetRawData(True)
+#    dom_code, sub_code = a.GetStitchRule()
+#    dom_data, sub_data = a.GetStitchData()
+    f = h5py.File(path,'r')
+#    subg = f['Stitch/CFE/IF/1d']
+    def printname(name):
+        print(name)
+    f.visit(printname)
