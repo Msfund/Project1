@@ -180,15 +180,14 @@ class HisDayData:
 
     def GetStitchData(self,save_hdf=False):
         # 读RawData
-        trade_data = self.trade_data
-        # 载Rule
-        dom_code, sub_code = self.GetStitchRule()
-        # stich
+        RawData = HDFutility(path,self.excode, self.vt, self.startdate, self.enddate).HDFread('1d')
+        # 读Rule
+        DomRule = HDFutility(path,self.excode, self.vt, self.startdate, self.enddate).HDFread('00')
+        SubRule = HDFutility(path,self.excode, self.vt, self.startdate, self.enddate).HDFread('01')
+        # stitch
         dom_data = dom_code.merge(trade_data,how='left',on=['TRADE_DT','S_INFO_WINDCODE']) ###
         sub_data = sub_code.merge(trade_data,how='left',on=['TRADE_DT','S_INFO_WINDCODE']) ###
-        if save_hdf == True:
-            HDFutility(self.excode, self.vt, self.startdate, self.enddate, path).HDFwrite(dom_data,'1d','00')
-            HDFutility(self.excode, self.vt, self.startdate, self.enddate, path).HDFwrite(sub_data,'1d','01')
+
         return dom_data, sub_data
 
 
