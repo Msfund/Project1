@@ -65,10 +65,9 @@ class HisDayData:
         trade_data = self.GetRawData()
         trade_sort = trade_data.sort_values(by = ['TRADE_DT','S_DQ_OI'], ascending = [1,0])
         delistdate = self.future_delistdate()
-        # 取持仓量前三合约的时间、代码 maxOI subOI thiOI
+        # 取持仓量前三合约的时间、代码 maxOI subOI
         maxOI = trade_sort.groupby('TRADE_DT').nth(0).reset_index()[['TRADE_DT','S_INFO_WINDCODE']]
         subOI = trade_sort.groupby('TRADE_DT').nth(1).reset_index()[['TRADE_DT','S_INFO_WINDCODE']]
-        thiOI = trade_sort.groupby('TRADE_DT').nth(2).reset_index()[['TRADE_DT','S_INFO_WINDCODE']]
         # 初始化主力合约、次主力合约代码，默认为持仓量最大，次大的合约
         dom_code = maxOI.copy()
         sub_code = subOI.copy()
@@ -124,12 +123,10 @@ class HisDayData:
             sub_code = sub_code.fillna(method = 'ffill')
         #--------------------------------------------------------------------------------
          #由于判断持仓量需要3天，在第4天才能换仓，所以数据往后移3个交易日
-        thiOI['S_INFO_WINDCODE'] = thiOI['S_INFO_WINDCODE'].shift(3)
         dom_code['S_INFO_WINDCODE'] = dom_code['S_INFO_WINDCODE'].shift(3)
         sub_code['S_INFO_WINDCODE'] = sub_code['S_INFO_WINDCODE'].shift(3)
         dom_code['S_INFO_WINDCODE'] = dom_code['S_INFO_WINDCODE'].fillna(method = 'bfill')
         sub_code['S_INFO_WINDCODE'] = sub_code['S_INFO_WINDCODE'].fillna(method = 'bfill')
-        thiOI['S_INFO_WINDCODE'] = thiOI['S_INFO_WINDCODE'].fillna(method = 'bfill')
         #----------------------------------------------------------------------
         #合并退市数据
         dom_code = pd.merge(dom_code,delistdate, how = 'left', on = 'S_INFO_WINDCODE')
