@@ -24,22 +24,18 @@ class HisDayData:
         self.trade_data = self.GetRawData()
 
     def GetRawData(self):
+        l=4
         if self.vt in CFEcode:
             exchmarkt = 'filesync.CIndexFuturesEODPrices'
         else:
             exchmarkt = 'filesync.CCommodityFuturesEODPrices'
-        if self.vt in DCEcode[0:10]:
-            sql = '''select s_info_windcode,trade_dt,
-            s_dq_presettle,s_dq_open,s_dq_high,s_dq_low,s_dq_close,s_dq_volume,s_dq_oi from '''+exchmarkt+'''
-            where trade_dt>= '''+self.startdate+''' and trade_dt<= '''+self.enddate+" and s_info_windcode LIKE '"+self.vt+'''%'
-            and fs_info_type = '2' and LENGTH(s_info_windcode)==9
-            order by trade_dt'''
-        else:
-            sql = '''select s_info_windcode,trade_dt,
-            s_dq_presettle,s_dq_open,s_dq_high,s_dq_low,s_dq_close,s_dq_volume,s_dq_oi from '''+exchmarkt+'''
-            where trade_dt>= '''+self.startdate+''' and trade_dt<= '''+self.enddate+" and s_info_windcode LIKE '"+self.vt+'''%'
-            and fs_info_type = '2'
-            order by trade_dt'''
+            if self.vt in DCEcode :
+                l=3
+        sql = '''select s_info_windcode,trade_dt,
+        s_dq_presettle,s_dq_open,s_dq_high,s_dq_low,s_dq_close,s_dq_volume,s_dq_oi from '''+exchmarkt+'''
+        where trade_dt>= '''+self.startdate+''' and trade_dt<= '''+self.enddate+" and regexp_like(s_info_windcode, '"+'^'+self.vt+str('[0-9]{')+str(l)+"}')"+'''
+        and fs_info_type = '2'
+        order by trade_dt'''
         self.cursor.execute(sql)
         trade_data = self.cursor.fetchall()
         trade_data = pd.DataFrame(trade_data)
@@ -62,15 +58,15 @@ class HisDayData:
 
     def GetStitchRule(self,save_hdf=False):
         trade_data = self.trade_data
-        trade_sort = trade_data.sort_values(by = ['TRADE_DT','S_DQ_OI','S_INFO_WINDCODE'], ascending = [1,0,1])
-        # 取持仓量前三合约的时间、代码 maxOI subOI thiOI
+        trade_sort = trade_data.sort_values(by = ['TRADE_DT','S_DQ_OI'], ascending = [1,0])
+        delistdate = self.future_delistdate()
+        # 取持仓量前三合约的时间、代码 maxOI subOI
         maxOI = trade_sort.groupby('TRADE_DT').nth(0).reset_index()[['TRADE_DT','S_INFO_WINDCODE']]
         subOI = trade_sort.groupby('TRADE_DT').nth(1).reset_index()[['TRADE_DT','S_INFO_WINDCODE']]
-        thiOI = trade_sort.groupby('TRADE_DT').nth(2).reset_index()[['TRADE_DT','S_INFO_WINDCODE']]
         # 初始化主力合约、次主力合约代码，默认为持仓量最大，次大的合约
         dom_code = maxOI.copy()
         sub_code = subOI.copy()
-#----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         #满足最大持仓量满 3天且不向当月切换
         ##先找到换仓点
         dom_loca = ~(dom_code['S_INFO_WINDCODE'] == dom_code['S_INFO_WINDCODE'].shift(1))
@@ -91,8 +87,8 @@ class HisDayData:
         dom_check3[0] = False
         sub_check3 = (scode == sub_code['TRADE_DT'].str[2:6])
         sub_check3[0] = False
-        ##找到是当月合约且换仓的位置,设置为None 由于主力合约持仓量退市期间将会下降到次主力合约，而期间一般不超过5天
-        for i in range(5):
+        ##找到是当月合约且换仓的位置,设置为None 由于主力合约持仓量退市期间将会下降到次主力合约，有3天的判断期
+        for i in range(3):
             dom_code['S_INFO_WINDCODE'].ix[dom_loca.shift(i) & dom_check3] = None
             sub_code['S_INFO_WINDCODE'].ix[sub_loca.shift(i) & sub_check3] = None
         dom_code['S_INFO_WINDCODE'] = dom_code['S_INFO_WINDCODE'].fillna(method = 'ffill')
@@ -122,12 +118,10 @@ class HisDayData:
             sub_code = sub_code.fillna(method = 'ffill')
         #--------------------------------------------------------------------------------
          #由于判断持仓量需要3天，在第4天才能换仓，所以数据往后移3个交易日
-        thiOI['S_INFO_WINDCODE'] = thiOI['S_INFO_WINDCODE'].shift(3)
         dom_code['S_INFO_WINDCODE'] = dom_code['S_INFO_WINDCODE'].shift(3)
         sub_code['S_INFO_WINDCODE'] = sub_code['S_INFO_WINDCODE'].shift(3)
         dom_code['S_INFO_WINDCODE'] = dom_code['S_INFO_WINDCODE'].fillna(method = 'bfill')
         sub_code['S_INFO_WINDCODE'] = sub_code['S_INFO_WINDCODE'].fillna(method = 'bfill')
-        thiOI['S_INFO_WINDCODE'] = thiOI['S_INFO_WINDCODE'].fillna(method = 'bfill')
         #----------------------------------------------------------------------
         #合并退市数据
         dom_code = pd.merge(dom_code,delistdate, how = 'left', on = 'S_INFO_WINDCODE')
