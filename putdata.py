@@ -3,6 +3,34 @@ import pandas as pd
 import h5py
 from getdata3 import *
 
+'''
+HDF
+    /Raw
+        /1d
+            Attrs:
+                Index_columns = Date Asset
+                Matrix_columns = AdjFactor Open High Low Close
+                From_date =
+                To_date =
+            Datasets:
+                Index
+                RawData
+    /Stitch
+        /CFE
+            /IF
+               /1d
+                  /00
+                      Attrs:
+                        Index_columns = Date Asset
+                        Matrix_columns = AdjFactor Open High Low Close
+                        From_date =
+                        To_date =
+                      Datasets:
+                        Index
+                        StitchData
+                  /01
+    /Indicator
+'''
 class HDFutility():
 
     def __init__(self,path,excode,vt,period,startdate,enddate):
@@ -12,49 +40,38 @@ class HDFutility():
         self.period = period
         self.startdate = startdate
         self.enddate = enddate
-
-
     # 读StitchData peroid为频率，kind为'raw','00'、'01'
-    def HDFread(self,kind='raw'):
+    def HDFread(self,period='1d',kind='raw'):
         f = h5py.File(self.path,'r')
-        if kind = 'raw':
-            date  = f['RawData/Date']
-            asset = f['RawData/Asset']
-            open  = f['RawData/Open']
-            high  = f['RawData/High']
-            low   = f['RawData/Low']
-            close = f['RawData/Close']
-            data = pd.DataFrame({'Date':date,'Asset':asset,'Open':open,'High':high,'Low':low,'Close':close})
-            data = data[data.date > self.startdate & data.date < self.enddate]
+        if kind == 'raw':
+            index  = f['Raw/'+period+'/Index']
+            matrix = f['Raw/'+period+'/Rawdata']
+            columns_name = f['Raw/'+period].Attrs('Index_columns') + f['Raw/'+period].Attrs('Matrix_columns')
+            data = pd.DataFrame(np.hstack(index,matrix))
+            data.columns = columns_name
+            data = data[data.date > self.startdate & data.date < self.startdate & self.vt == data.asset]
         else:
-            date  = f['Stitch'][self.excode][self.vt][kind][Date]
-            asset = f['Stitch'][self.excode][self.vt][kind][Asset]
-            open  = f['Stitch'][self.excode][self.vt][kind][Open]
-            high  = f['Stitch'][self.excode][self.vt][kind][High]
-            low   = f['Stitch'][self.excode][self.vt][kind][Low]
-            close = f['Stitch'][self.excode][self.vt][kind][Close]
-            adjfactor = f['Stitch'][self.excode][self.vt][kind][AdjFactor]
-            data = pd.DataFrame({'Date':date,'Asset':asset,'Open':open,'High':high,'Low':low,'Close':close,'AdjFactor':adjfactor})
+            index = f['Stitch/'+self.excode+'/'+self.vt+'/'+period+'/'+kind+'/Index']
+            matrix = f['Stitch/'+self.excode+'/'+self.vt+'/'+period+'/'+kind+'/StitchData']
+            columns_name = f['Stitch/'+self.excode+'/'+self.vt+'/'+period+'/'+kind].Attrs('Index_columns') + f['Stitch/'+self.excode+'/'+self.vt+'/'+period+'/'+kind].Attrs('Matrix_columns')
+            data = pd.DataFrame(np.hstack(index,matrix))
+            data.columns = columns_name
+            data = data[data.date > self.startdate & data.date < self.startdate & self.vt == data.asset]
         f.close()
         return data
     # 写StitchData peroid为频率，kind为'raw','00'、'01'
-    def HDFwrite(self,indata,kind='raw'):
+    def HDFwrite(self,indata,period='1d',kind='raw'):
         f = h5py.File(self.path,'w')
-        if kind = 'raw':
-            f['RawData/Date']  = indata.date.values
-            f['RawData/Asset'] = indata.Asset.values
-            f['RawData/Open']  = indata.open.values
-            f['RawData/High']  = indata.high.values
-            f['RawData/Low']   = indata.low.values
-            f['RawData/Close'] = indata.close.values
+        if kind == 'raw':
+            f['Raw/'+period+'/Index'] = dom_data[['TRADE_DT','S_INFO_WINDCODE']].values.astype(np.dtype("S10"))
+            f['Raw/'+period+'/Rawdata'] = dom_data[['S_DQ_OPEN','S_DQ_HIGH','S_DQ_LOW','S_DQ_CLOSE']].values
+            f['Raw/'+period].attrs.create('Index_columns', ["Date", "Asset"], dtype=h5py.special_dtype(vlen=str))
+            f['Raw/'+period].attrs.create('RawData_columns', ["Open", "High", "Low", "Close"], dtype=h5py.special_dtype(vlen=str))
         else:
-            f['Stitch'][self.excode][self.vt][kind][Date] = indata.date.values
-            f['Stitch'][self.excode][self.vt][kind][Asset] = indata.asset.values
-            f['Stitch'][self.excode][self.vt][kind][Open] = indata.open.values
-            f['Stitch'][self.excode][self.vt][kind][High] = indata.high.values
-            f['Stitch'][self.excode][self.vt][kind][Low] = indata.low.values
-            f['Stitch'][self.excode][self.vt][kind][Close] = indata.close.values
-            f['Stitch'][self.excode][self.vt][kind][AdjFactor] = indata.adjfactor.values
+            f['Stitch/'+self.excode+'/'+self.vt+'/'+period+'/'+kind+'/Index'] = dom_data[['TRADE_DT','S_INFO_WINDCODE']].values.astype(np.dtype("S10"))
+            f['Stitch/'+self.excode+'/'+self.vt+'/'+period+'/'+kind+'/StitchData'] = dom_data[['S_DQ_OPEN','S_DQ_HIGH','S_DQ_LOW','S_DQ_CLOSE']].values
+            f['Stitch/'+self.excode+'/'+self.vt+'/'+period+'/'+kind].attrs.create('Index_columns', ["Date", "Asset"], dtype=h5py.special_dtype(vlen=str))
+            f['Stitch/'+self.excode+'/'+self.vt+'/'+period+'/'+kind].attrs.create('StitchData_columns', ["Open", "High", "Low", "Close"], dtype=h5py.special_dtype(vlen=str))
         f.close()
 
     def HDFcombine(self):
@@ -62,31 +79,17 @@ class HDFutility():
 
 if __name__  ==  '__main__':
     path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
-    Data = HDFutility('CFE','IF','1d','20170101','20171231',path).HDFread()
+    Data = HDFutility('CFE','IF','1d','20170101','20171231',path).HDFwrite(dom_data)
     try:
         f = h5py.File('C:\\Users\\user\\GitHub\\Project1\\out.hdf5','a')
-        # 一级目录
-        f.create_group('RawData')
-        f.create_group('Stitch')
-        f.create_group('Indicator')
-        # 二级目录 Excode
-        f['Stitch'].create_group('CFE')
-        f['Stitch'].create_group('SHF')
-        f['Stitch'].create_group('DCE')
-        f['Stitch'].create_group('CZC')
-        # 三级目录 AssetCode
-        f['Stitch']['CFE'].create_group('IF')
-        # 四级目录 period
-        f['Stitch']['CFE']['IF'].create_group('1d')
-        # 五级目录 kind
-        f['Stitch']['CFE']['IF']['1d'].create_group('00')
-
+        f.create_group('Raw')
+        f.create_group('Stitch/CFE/IF/1d/00')
+        f.create_group('Stitch/CFE/IF/1d/01')
         f.close()
-        f["Stitch/CFE/IF/1d/00"].keys()
-        f = h5py.File(path,'w')
-        f["Stitch/CFE/IF/1d/00"].create_dataset('Close',data=dom_data['S_DQ_CLOSE'].values)
-
-        f.close()
+        f = h5py.File(path,'a')
+        len(f)
+        f['Raw/Index'] = dom_data[['TRADE_DT','S_INFO_WINDCODE']].values.astype(np.dtype("S10"))
+        f['Raw/Rawdata'] = dom_data[['S_DQ_OPEN','S_DQ_HIGH','S_DQ_LOW','S_DQ_CLOSE']].values
     except:
         print('Creation Failed')
     else:

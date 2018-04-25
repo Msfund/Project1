@@ -23,7 +23,7 @@ class HisDayData:
         self.cursor = db.cursor()
         self.trade_data = self.GetRawData()
 
-    def GetRawData(self):
+    def GetRawData(self,save_hdf=False):
         l=4
         if self.vt in CFEcode:
             exchmarkt = 'filesync.CIndexFuturesEODPrices'
@@ -41,6 +41,8 @@ class HisDayData:
         trade_data = pd.DataFrame(trade_data)
         trade_data.columns = [i[0] for i in self.cursor.description]
         trade_data = trade_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE'])
+        if save_hdf == True:
+            HDFutility(self.excode, self.vt, self.startdate, self.enddate, path).HDFwrite(trade_data,'1d')
         return trade_data
 
     def future_delistdate(self):
