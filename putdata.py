@@ -42,10 +42,10 @@ class HDFutility():
     def HDFread(self,kind='00'):
         f = h5py.File(self.path,'r')
         subg = f['Stitch/'+self.excode+'/'+self.vt+'/'+kind]
-        index = subg['Index']
-        matrix = subg['Matrix']
-        columns_name = subg.attrs('Index_columns') + subg.attrs('Matrix_columns')
-        data = pd.DataFrame(np.hstack(index,matrix))
+        index = subg['Index'][:].astype(np.dtype("str"))
+        matrix = subg['Matrix'][:].astype(np.dtype("float32"))
+        columns_name = np.hstack((subg.attrs['Index_columns'],subg.attrs['Matrix_columns']))
+        data = pd.DataFrame(np.hstack((index,matrix)))
         data.columns = columns_name
         f.close()
         return data
@@ -60,7 +60,7 @@ class HDFutility():
         subg['Index'] = indata.ix[:,0:2].values.astype(np.dtype("S10"))
         subg['Matrix'] = indata.ix[:,2:].values
         subg.attrs['Index_columns'] = columns_name[0:2].astype(h5py.special_dtype(vlen=str))
-        subg.attrs['Index_columns'] = columns_name[2:].astype(h5py.special_dtype(vlen=str))
+        subg.attrs['Matrix_columns'] = columns_name[2:].astype(h5py.special_dtype(vlen=str))
         f.close()
 
     def HDFcombine(self):
@@ -69,3 +69,4 @@ class HDFutility():
 if __name__  ==  '__main__':
     path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
     # Data = HDFutility('CFE','IF','1d','20170101','20171231',path).HDFwrite(dom_data)
+

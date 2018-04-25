@@ -149,6 +149,9 @@ class HisDayData:
         # 获取调整因子的数据
         dom_code = self.get_adj_factor(dom_code)
         sub_code = self.get_adj_factor(sub_code)
+        if save_hdf == True:
+            HDFutility(path,self.excode, self.vt, self.startdate, self.enddate).HDFwrite(dom_code,'00')
+            HDFutility(path,self.excode, self.vt, self.startdate, self.enddate).HDFwrite(sub_code,'01')
         return dom_code,sub_code
 
 
@@ -190,12 +193,8 @@ class HisDayData:
 
 
 if __name__  ==  '__main__':
-    a = HisDayData('CFE','IF','20170101','20171231')
+    a = HisDayData('CFE','IF','20160101','20171231')
     trade_data = a.GetRawData(True)
-#    dom_code, sub_code = a.GetStitchRule()
+    out = HDFutility(path,'CFE','IF','20160101','20171231').HDFread('1d')
+#    dom_code, sub_code = a.GetStitchRule(True)
 #    dom_data, sub_data = a.GetStitchData()
-    f = h5py.File(path,'r')
-#    subg = f['Stitch/CFE/IF/1d']
-    def printname(name):
-        print(name)
-    f.visit(printname)
