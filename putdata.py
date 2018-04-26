@@ -69,4 +69,3 @@ class HDFutility():
 if __name__  ==  '__main__':
     path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
     # Data = HDFutility('CFE','IF','1d','20170101','20171231',path).HDFwrite(dom_data)
-
