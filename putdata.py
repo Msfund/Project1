@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import h5py
 import re
-from getdata3 import path
 
 '''
 HDF
@@ -70,8 +69,3 @@ class HDFutility:
                 subg.attrs['From_date'] = startdate
                 subg.attrs['To_date'] = enddate
 
-    def HDFcombine(self):
-        pass
-
-if __name__  ==  '__main__':
-    pass

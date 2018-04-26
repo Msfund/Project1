@@ -11,6 +11,7 @@ DCEcode = ('A','B','M','C','Y','P','L','V','J','I','JM','JD','FB','BB','PP','CS'
 CZCcode = ('PM','WH','CF','SR','OI','TA','RI','LR','MA','FG','RS','RM','TC','ZC','JR','SF','SM')
 Allcode = CFEcode + SHFcode + DCEcode + CZCcode
 
+
 # CCommodityFuturesEODPrices：date vt preSettle open high low close volumn openinterest
 class HisDayData:
 
@@ -193,6 +194,22 @@ class HisDayData:
 
 
 if __name__  ==  '__main__':
-    a = HisDayData('CFE','IF','20100101','20171231')
-    a.GetStitchRule(a.GetRawData(True),True)
+    AssetList = {}
+    AssetList['CFE']=['IF','IC','IH'] #'TF','T']
+    AssetList['SHF']=['CU','AL','ZN','RU','AU','AG','RB','WR','PB','BU','HC','NI','SN'] #'FU'
+    AssetList['DCE']=['A','B','M','C','Y','P','L','V','J','I','JM','JD','FB','BB','PP','CS']
+    # AssetList['CZC']=['SR','OI','TA','RI','LR','MA','FG','RS','RM','TC','ZC','JR','SF','SM'] #'PM' 'WH' 'CF'
+    AssetData = {}
+    Dom_data = {}
+    Sub_data = {}
+    startdate = '20170101'
+    enddate = '20171231'
+    for exch,asset in AssetList.items():
+        for i in range(len(asset)):
+            print(asset[i])
+            AssetData[asset[i]] = HisDayData(exch,asset[i],startdate,enddate)
+            AssetData[asset[i]].GetStitchRule(AssetData[asset[i]].GetRawData(True),True)
 
+            # AssetData[asset[i]].GetStitchRule(True)
+    #a = HisDayData('CZC','RS','20170101','20171231')
+    #a.GetStitchRule(a.GetRawData(True),True)
