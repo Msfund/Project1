@@ -51,21 +51,25 @@ class HDFutility():
         return data
     # 写, kind为 '00'、'01'、'1d'
     def HDFwrite(self,indata,kind='00'):
-        f = h5py.File(self.path,'w')
-        try:
-            subg = f['Stitch/'+self.excode+'/'+self.vt+'/'+kind]
-        except:
-            subg = f.create_group('Stitch/'+self.excode+'/'+self.vt+'/'+kind)
-        columns_name = indata.columns
-        subg['Index'] = indata.ix[:,0:2].values.astype(np.dtype("S10"))
-        subg['Matrix'] = indata.ix[:,2:].values
-        subg.attrs['Index_columns'] = columns_name[0:2].astype(h5py.special_dtype(vlen=str))
-        subg.attrs['Matrix_columns'] = columns_name[2:].astype(h5py.special_dtype(vlen=str))
-        f.close()
+        with h5py.File(self.path,'a') as f:
+            try:
+                subg = f['Stitch/'+self.excode+'/'+self.vt+'/'+kind]
+            except:
+                subg = f.create_group('Stitch/'+self.excode+'/'+self.vt+'/'+kind)
+            columns_name = indata.columns
+            subg['Index'][:] = indata.ix[:,0:2].values.astype(np.dtype("S10"))
+            subg['Matrix'][:] = indata.ix[:,2:].values
+            subg.attrs['Index_columns'] = columns_name[0:2].astype(h5py.special_dtype(vlen=str))
+            subg.attrs['Matrix_columns'] = columns_name[2:].astype(h5py.special_dtype(vlen=str))
 
     def HDFcombine(self):
         pass
 
 if __name__  ==  '__main__':
     path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
+    f = h5py.File(path,'a')
+    subg = f['Stitch/CFE/IF/1d']
+    HDFutility(path,'CFE','IF','20160101','20171231').HDFwrite(sub_code,'01')
+    
+
     # Data = HDFutility('CFE','IF','1d','20170101','20171231',path).HDFwrite(dom_data)
