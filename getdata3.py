@@ -4,7 +4,7 @@ import numpy as np
 import re
 from putdata import *
 
-path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
+
 CFEcode = ('IF','IC','IH','TF','T')
 SHFcode = ('CU','AL','ZN','RU','FU','AU','AG','RB','WR','PB','BU','HC','NI','SN')
 DCEcode = ('A','B','M','C','Y','P','L','V','J','I','JM','JD','FB','BB','PP','CS')
@@ -31,7 +31,7 @@ class HisDayData:
             exchmarkt = 'filesync.CCommodityFuturesEODPrices'
             if self.vt in DCEcode :
                 l=3
-        sql = '''select s_info_windcode,trade_dt,
+        sql = '''select trade_dt,s_info_windcode,
         s_dq_presettle,s_dq_open,s_dq_high,s_dq_low,s_dq_close,s_dq_volume,s_dq_oi from '''+exchmarkt+'''
         where trade_dt>= '''+self.startdate+''' and trade_dt<= '''+self.enddate+" and regexp_like(s_info_windcode, '"+'^'+self.vt+str('[0-9]{')+str(l)+"}')"+'''
         and fs_info_type = '2'
@@ -178,22 +178,22 @@ class HisDayData:
         code = code.fillna(value = 1) # 第一个调整因子为1
         return code
 
-    def GetStitchData(self,save_hdf=False):
+    def GetStitchData(self):
         # 读RawData
         RawData = HDFutility(path,self.excode, self.vt, self.startdate, self.enddate).HDFread('1d')
         # 读Rule
         DomRule = HDFutility(path,self.excode, self.vt, self.startdate, self.enddate).HDFread('00')
         SubRule = HDFutility(path,self.excode, self.vt, self.startdate, self.enddate).HDFread('01')
         # stitch
-        dom_data = dom_code.merge(trade_data,how='left',on=['TRADE_DT','S_INFO_WINDCODE']) ###
-        sub_data = sub_code.merge(trade_data,how='left',on=['TRADE_DT','S_INFO_WINDCODE']) ###
+        dom_data = DomRule.merge(RawData,how='left',on=['TRADE_DT','S_INFO_WINDCODE']) 
+        sub_data = SubRule.merge(RawData,how='left',on=['TRADE_DT','S_INFO_WINDCODE']) 
 
         return dom_data, sub_data
 
 
 if __name__  ==  '__main__':
-    a = HisDayData('CFE','IF','20130101','20171231')
+    path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
+    a = HisDayData('CFE','IF','20110101','20171231')
     trade_data = a.GetRawData(True)
     dom_code, sub_code = a.GetStitchRule(True)
-
-#    dom_data, sub_data = a.GetStitchData()
+    dom_data, sub_data = a.GetStitchData()

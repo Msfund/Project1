@@ -42,8 +42,10 @@ class HDFutility():
     def HDFread(self,kind):
         with h5py.File(self.path,'r') as f:
             subg = f['Stitch/'+self.excode+'/'+self.vt+'/'+kind]
-            index = subg['Index'][:].astype(np.dtype("str"))
-            matrix = subg['Matrix'][:].astype(np.dtype("float32"))
+            rawindex = subg['Index'][:].astype(np.dtype("str"))
+            rawmatrix = subg['Matrix'][:]
+            index = rawindex[np.vstack((rawindex[:,0]>self.startdate,rawindex[:,0]<self.enddate)).all(axis=0)]
+            matrix = rawmatrix[np.vstack((rawindex[:,0]>self.startdate,rawindex[:,0]<self.enddate)).all(axis=0)]
             columns_name = np.hstack((subg.attrs['Index_columns'],subg.attrs['Matrix_columns']))
             data = pd.DataFrame(np.hstack((index,matrix)))
             data.columns = columns_name
@@ -55,12 +57,14 @@ class HDFutility():
                 subg = f['Stitch/'+self.excode+'/'+self.vt+'/'+kind]
                 fromdate = subg.attrs['From_date']
                 todate = subg.attrs['To_date']
-                adddata = indata.ix[:,0:2][pd.concat([indata.TRADE_DT < fromdate,indata.TRADE_DT > todate],axis=1).any(axis=1)].values
+                adddata = indata[pd.concat([indata.TRADE_DT < fromdate,indata.TRADE_DT > todate],axis=1).any(axis=1)]
                 if adddata.shape[0] == 0:
                     print("No data added")
                 else:
                     subg['Index'].resize((subg['Index'].shape[0]+adddata.shape[0], 2))
-                    subg['Index'][-adddata.shape[0]:,:] = adddata.astype(np.dtype("S10"))
+                    subg['Index'][-adddata.shape[0]:,:] = adddata.ix[:,0:2].values.astype(np.dtype("S10"))
+                    subg['Matrix'].resize((subg['Index'].shape[0]+adddata.shape[0], 20))
+                    subg['Matrix'][-adddata.shape[0]:,:] = adddat.ix[:,2:].valuess
                     subg.attrs['From_date'] = min(self.startdate,fromdate)
                     subg.attrs['To_date'] = max(self.enddate,todate)
             except:
@@ -77,13 +81,4 @@ class HDFutility():
         pass
 
 if __name__  ==  '__main__':
-    path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
-    f = h5py.File(path,'a')
-    f.close()
-    subg = f['Stitch/CFE/IF/1d']
-    subg = f.create_group('Stitch/CFE/IF/00')
-    HDFutility(path,'CFE','IF','20160101','20170101').HDFwrite(dom_code,'00')
-
-
-    # Data = HDFutility('CFE','IF','1d','20170101','20171231',path).HDFwrite(dom_data)
-    HDFutility(path,'CFE','IF','20160101','20161231').HDFread('00')
+    pass
