@@ -21,7 +21,7 @@ class HisDayData:
         self.enddate = enddate
         db = cx_Oracle.connect('fe','fe','192.168.100.22:1521/winddb')
         self.cursor = db.cursor()
-        self.trade_data = self.GetRawData()
+        self.hdfengine = HDFutility()
 
     def GetRawData(self,save_hdf=False):
         l=4
@@ -37,13 +37,13 @@ class HisDayData:
         and fs_info_type = '2'
         order by trade_dt'''
         self.cursor.execute(sql)
-        trade_data = self.cursor.fetchall()
-        trade_data = pd.DataFrame(trade_data)
-        trade_data.columns = [i[0] for i in self.cursor.description]
-        trade_data = trade_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE'])
+        raw_data = self.cursor.fetchall()
+        raw_data = pd.DataFrame(raw_data)
+        raw_data.columns = [i[0] for i in self.cursor.description]
+        raw_data = raw_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE'])
         if save_hdf == True:
-            HDFutility(path,self.excode, self.vt, self.startdate, self.enddate).HDFwrite(trade_data,'1d')
-        return trade_data
+            self.hdfengine.HDFwrite(path,self.excode, self.vt, self.startdate, self.enddate,raw_data,'1d')
+        return raw_data
 
     def future_delistdate(self):
         # 获取合约退市日期
@@ -58,9 +58,8 @@ class HisDayData:
         delistdate.columns = [i[0] for i in self.cursor.description]
         return delistdate
 
-    def GetStitchRule(self,save_hdf=False):
-        trade_data = self.trade_data
-        trade_sort = trade_data.sort_values(by = ['TRADE_DT','S_DQ_OI'], ascending = [1,0])
+    def GetStitchRule(self,raw_data,save_hdf=False):
+        trade_sort = raw_data.sort_values(by = ['TRADE_DT','S_DQ_OI'], ascending = [1,0])
         delistdate = self.future_delistdate()
         # 取持仓量前三合约的时间、代码 maxOI subOI
         maxOI = trade_sort.groupby('TRADE_DT').nth(0).reset_index()[['TRADE_DT','S_INFO_WINDCODE']]
@@ -147,15 +146,15 @@ class HisDayData:
         sub_code.drop(['FS_INFO_SCCODE','S_INFO_LISTDATE','S_INFO_DELISTDATE'],axis=1,inplace = True)
         #----------------------------------------------------------------------
         # 获取调整因子的数据
-        dom_code = self.get_adj_factor(dom_code)
-        sub_code = self.get_adj_factor(sub_code)
+        dom_code = self.get_adj_factor(raw_data,dom_code)
+        sub_code = self.get_adj_factor(raw_data,sub_code)
         if save_hdf == True:
-            HDFutility(path,self.excode, self.vt, self.startdate, self.enddate).HDFwrite(dom_code,'00')
-            HDFutility(path,self.excode, self.vt, self.startdate, self.enddate).HDFwrite(sub_code,'01')
+            self.hdfengine.HDFwrite(path,self.excode, self.vt, self.startdate, self.enddate,dom_code,'00')
+            self.hdfengine.HDFwrite(path,self.excode, self.vt, self.startdate, self.enddate,sub_code,'01')
         return dom_code,sub_code
 
 
-    def get_adj_factor(self,code):
+    def get_adj_factor(self,raw_data,code):
         # 找到切换点 lead lag
         lead = code['S_INFO_WINDCODE'].shift(-1) != code['S_INFO_WINDCODE']
         lag = code['S_INFO_WINDCODE'].shift(1) != code['S_INFO_WINDCODE']
@@ -163,10 +162,10 @@ class HisDayData:
         lag.iloc[0] = False
         temp1 = pd.concat([code[lead].reset_index().drop(columns='index'),code[lag].reset_index().drop(columns=['index','TRADE_DT'])],axis=1)
         temp1.columns = ['TRADE_DT','old','new']
-        temp2 = temp1.merge(self.trade_data[['TRADE_DT','S_INFO_WINDCODE','S_DQ_CLOSE']],left_on=['TRADE_DT','old'],right_on=['TRADE_DT','S_INFO_WINDCODE'])
+        temp2 = temp1.merge(raw_data[['TRADE_DT','S_INFO_WINDCODE','S_DQ_CLOSE']],left_on=['TRADE_DT','old'],right_on=['TRADE_DT','S_INFO_WINDCODE'])
         del temp2['S_INFO_WINDCODE']
         temp2 = temp2.rename(columns={'S_DQ_CLOSE':'oldclose'})
-        temp3 = temp2.merge(self.trade_data[['TRADE_DT','S_INFO_WINDCODE','S_DQ_CLOSE']],left_on=['TRADE_DT','new'],right_on=['TRADE_DT','S_INFO_WINDCODE'])
+        temp3 = temp2.merge(raw_data[['TRADE_DT','S_INFO_WINDCODE','S_DQ_CLOSE']],left_on=['TRADE_DT','new'],right_on=['TRADE_DT','S_INFO_WINDCODE'])
         del temp3['S_INFO_WINDCODE']
         temp3 = temp3.rename(columns={'S_DQ_CLOSE':'newclose'})
         # t时主力合约从C1切换成C2，adj_factor = C1_Close(t-1)/C2_Close(t-1)
@@ -180,20 +179,20 @@ class HisDayData:
 
     def GetStitchData(self):
         # 读RawData
-        RawData = HDFutility(path,self.excode, self.vt, self.startdate, self.enddate).HDFread('1d')
+        RawData = self.hdfengine.HDFread(path,self.excode, self.vt, self.startdate, self.enddate,'1d')
         # 读Rule
-        DomRule = HDFutility(path,self.excode, self.vt, self.startdate, self.enddate).HDFread('00')
-        SubRule = HDFutility(path,self.excode, self.vt, self.startdate, self.enddate).HDFread('01')
+        DomRule = self.hdfengine.HDFread(path,self.excode, self.vt, self.startdate, self.enddate,'00')
+        SubRule = self.hdfengine.HDFread(path,self.excode, self.vt, self.startdate, self.enddate,'01')
         # stitch
-        dom_data = DomRule.merge(RawData,how='left',on=['TRADE_DT','S_INFO_WINDCODE']) 
-        sub_data = SubRule.merge(RawData,how='left',on=['TRADE_DT','S_INFO_WINDCODE']) 
+        dom_data = DomRule.merge(RawData,how='left',on=['TRADE_DT','S_INFO_WINDCODE'])
+        sub_data = SubRule.merge(RawData,how='left',on=['TRADE_DT','S_INFO_WINDCODE'])
 
         return dom_data, sub_data
 
 
 if __name__  ==  '__main__':
     path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
-    a = HisDayData('CFE','IF','20110101','20171231')
-    trade_data = a.GetRawData(True)
-    dom_code, sub_code = a.GetStitchRule(True)
+    a = HisDayData('CFE','IF','20120101','20131231')
+    raw_data = a.GetRawData(True)
+    dom_code, sub_code = a.GetStitchRule(raw_data,True)
     dom_data, sub_data = a.GetStitchData()
