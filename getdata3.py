@@ -192,9 +192,8 @@ class HisDayData:
 
 
 if __name__  ==  '__main__':
-    a = HisDayData('CFE','IF','20160101','20171231')
+    a = HisDayData('CFE','IF','20130101','20171231')
     trade_data = a.GetRawData(True)
-#    out = HDFutility(path,'CFE','IF','20160101','20171231').HDFread('1d')
-    dom_code, sub_code = a.GetStitchRule()
+    dom_code, sub_code = a.GetStitchRule(True)
 
 #    dom_data, sub_data = a.GetStitchData()
