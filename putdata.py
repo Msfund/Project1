@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import h5py
 import re
-from getdata3 import *
+from getdata3 import path
 
 '''
 HDF
@@ -30,7 +30,7 @@ HDF
 
     /Indicator
 '''
-class HDFutility():
+class HDFutility:
     # 读，kind为 '00'、'01'、'1d'
     def HDFread(self,path,excode,vt,startdate,enddate,kind):
         with h5py.File(path,'r') as f:

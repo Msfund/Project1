@@ -2,9 +2,9 @@ import cx_Oracle
 import pandas as pd
 import numpy as np
 import re
-from putdata import *
+from putdata import HDFutility
 
-
+path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
 CFEcode = ('IF','IC','IH','TF','T')
 SHFcode = ('CU','AL','ZN','RU','FU','AU','AG','RB','WR','PB','BU','HC','NI','SN')
 DCEcode = ('A','B','M','C','Y','P','L','V','J','I','JM','JD','FB','BB','PP','CS')
@@ -21,7 +21,6 @@ class HisDayData:
         self.enddate = enddate
         db = cx_Oracle.connect('fe','fe','192.168.100.22:1521/winddb')
         self.cursor = db.cursor()
-        self.hdfengine = HDFutility()
 
     def GetRawData(self,save_hdf=False):
         l=4
@@ -42,7 +41,8 @@ class HisDayData:
         raw_data.columns = [i[0] for i in self.cursor.description]
         raw_data = raw_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE'])
         if save_hdf == True:
-            self.hdfengine.HDFwrite(path,self.excode, self.vt, self.startdate, self.enddate,raw_data,'1d')
+            hdf = HDFutility()
+            hdf.HDFwrite(path,self.excode, self.vt, self.startdate, self.enddate,raw_data,'1d')
         return raw_data
 
     def future_delistdate(self):
@@ -149,8 +149,9 @@ class HisDayData:
         dom_code = self.get_adj_factor(raw_data,dom_code)
         sub_code = self.get_adj_factor(raw_data,sub_code)
         if save_hdf == True:
-            self.hdfengine.HDFwrite(path,self.excode, self.vt, self.startdate, self.enddate,dom_code,'00')
-            self.hdfengine.HDFwrite(path,self.excode, self.vt, self.startdate, self.enddate,sub_code,'01')
+            hdf = HDFutility()
+            hdf.HDFwrite(path,self.excode, self.vt, self.startdate, self.enddate,dom_code,'00')
+            hdf.HDFwrite(path,self.excode, self.vt, self.startdate, self.enddate,sub_code,'01')
         return dom_code,sub_code
 
 
@@ -178,11 +179,12 @@ class HisDayData:
         return code
 
     def GetStitchData(self):
+        hdf = HDFutility()
         # 读RawData
-        RawData = self.hdfengine.HDFread(path,self.excode, self.vt, self.startdate, self.enddate,'1d')
+        RawData = hdf.HDFread(path,self.excode, self.vt, self.startdate, self.enddate,'1d')
         # 读Rule
-        DomRule = self.hdfengine.HDFread(path,self.excode, self.vt, self.startdate, self.enddate,'00')
-        SubRule = self.hdfengine.HDFread(path,self.excode, self.vt, self.startdate, self.enddate,'01')
+        DomRule = hdf.HDFread(path,self.excode, self.vt, self.startdate, self.enddate,'00')
+        SubRule = hdf.HDFread(path,self.excode, self.vt, self.startdate, self.enddate,'01')
         # stitch
         dom_data = DomRule.merge(RawData,how='left',on=['TRADE_DT','S_INFO_WINDCODE'])
         sub_data = SubRule.merge(RawData,how='left',on=['TRADE_DT','S_INFO_WINDCODE'])
@@ -191,8 +193,6 @@ class HisDayData:
 
 
 if __name__  ==  '__main__':
-    path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
-    a = HisDayData('CFE','IF','20120101','20131231')
-    raw_data = a.GetRawData(True)
-    dom_code, sub_code = a.GetStitchRule(raw_data,True)
-    dom_data, sub_data = a.GetStitchData()
+    a = HisDayData('CFE','IF','20100101','20171231')
+    a.GetStitchRule(a.GetRawData(True),True)
+
