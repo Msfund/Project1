@@ -11,20 +11,30 @@ class HisDayData:
         db = cx_Oracle.connect(EXT_Wind_User,EXT_Wind_User,EXT_Wind_Link)
         self.cursor = db.cursor()
 
-    def getRawData(self,startdate,enddate,is_save=False):
+    def getData(self,startdate,enddate,is_save=False):
         AssetList = {}
         AssetList[EXT_EXCHANGE_CFE] = EXT_CFE_ALL
         AssetList[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
         AssetList[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
         AssetList[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
         AssetData = {}
-        for exch,asset in AssetList.items():
-            for i in range(len(asset)):
-                print(asset[i])
-                AssetData[asset[i]] = self.getQuoteWind(exch,asset[i],startdate,enddate)
+        DomCode = {}
+        SubCode = {}
+        for excode,symbol in AssetList.items():
+            for i in range(len(symbol)):
+                print(symbol[i])
+                AssetData[symbol[i]] = self.getQuoteWind(excode,symbol[i],startdate,enddate)
+                if AssetData[symbol[i]] is None:
+                    continue
+                else:
+                    DomCode[symbol[i]],SubCode[symbol[i]] = self.getStitchRule(excode,symbol[i],startdate,enddate,AssetData[symbol[i]])
                 if is_save == True:
                     hdf = HdfUtility()
-                    hdf.hdfWrite(EXT_Path,exch,asset[i],startdate,enddate,AssetData[asset[i]],EXT_Period_1)
+                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,DomCode[symbol[i]],EXT_Series_0)
+                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,SubCode[symbol[i]],EXT_Series_1)
+                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Period_1)
+        return AssetData,DomCode,SubCode
+
 
     def getQuoteWind(self,excode,symbol,startdate,enddate):
         if symbol in EXT_CFE_ALL:
@@ -54,19 +64,26 @@ class HisDayData:
 
         return raw_data
 
-    def futureDelistdate(self):
+    def futureDelistdate(self,symbol,startdate):
         # 获取合约退市日期
         sql = ''' select '''+EXT_In_Header2+''' from '''+EXT_Delistdate_File+'''
-        where '''+EXT_In_delistdate+''' > '''+startdate+'''
-        and '''+EXT_In_Asset+" LIKE'"+symbol+'''%' order by'''+EXT_In_Asset
+        where '''+EXT_In_Delistdate+''' > '''+startdate+'''
+        and '''+EXT_In_Asset+" LIKE'"+symbol+'''%' order by '''+EXT_In_Asset
         self.cursor.execute(sql)
         delistdate = pd.DataFrame(self.cursor.fetchall())
         delistdate.columns = EXT_In_Header2.split(',')
+        if symbol in EXT_CZCE_ALL:
+            #下面把所有郑州商品交易所原始数据三位数合约代码改为四位数
+            code_num = pd.Series([re.findall(r"\d*",delistdate[EXT_In_Asset][i])[2] for i in range(len(delistdate[EXT_In_Asset]))])
+            delist_len = pd.Series([len(code_num[i]) for i in range(len(code_num))])
+            delistdate[EXT_In_Asset].ix[delist_len == 3] = symbol+'1'+code_num.ix[delist_len == 3]+'.CZC'
+            delistdate[EXT_In_Asset].ix[delist_len == 4] = symbol+code_num.ix[delist_len == 4]+'.CZC'
         return delistdate
 
-    def getStitchRule(self,raw_data,save_hdf=False):
-        trade_sort = raw_data.sort_values(by = [EXT_Out_Date,'S_DQ_OI'], ascending = [1,0])
-        delistdate = self.futureDelistdate()
+    def getStitchRule(self,excode,symbol,startdate,enddate,raw_data):
+        trade_sort = raw_data.sort_values(by = [EXT_Out_Date,EXT_Out_OpenInterest], ascending = [1,0])
+        delistdate = self.futureDelistdate(symbol,startdate)
+        delistdate.columns = EXT_Out_Header2.split(',')
         # 取持仓量前三合约的时间、代码 maxOI subOI
         maxOI = trade_sort.groupby(EXT_Out_Date).nth(0).reset_index()[[EXT_Out_Date,EXT_Out_Asset]]
         subOI = trade_sort.groupby(EXT_Out_Date).nth(1).reset_index()[[EXT_Out_Date,EXT_Out_Asset]]
@@ -108,7 +125,7 @@ class HisDayData:
         dom_code[EXT_Out_Asset] = dom_code[EXT_Out_Asset].fillna(method = 'ffill')
         sub_code[EXT_Out_Asset] = sub_code[EXT_Out_Asset].fillna(method = 'ffill')
         #--------------------------------------------------------------------------------
-        if self.vt in CFEcode:
+        if symbol in EXT_CFE_ALL:
             pass
             # 处理主力合约和次主力合约，金融期货不回滚
             dom_check4 = []
@@ -154,10 +171,7 @@ class HisDayData:
         # 获取调整因子的数据
         dom_code = self.getAdjFactor(raw_data,dom_code)
         sub_code = self.getAdjFactor(raw_data,sub_code)
-        if save_hdf == True:
-            hdf = HdfUtility()
-            hdf.hdfWrite(EXT_Path,self.excode, self.vt, self.startdate, self.enddate,dom_code,'00')
-            hdf.hdfWrite(EXT_Path,self.excode, self.vt, self.startdate, self.enddate,sub_code,'01')
+
         return dom_code,sub_code
 
 
@@ -186,19 +200,17 @@ class HisDayData:
 
     def getStitchData(self,excode,symbol,startdate,enddate):
         hdf = HdfUtility()
-        # 读RawData
-        RawData = hdf.hdfRead(EXT_Path,excode,symbol,startdate,enddate,'1d')
-        # 读Rule
-        DomRule = hdf.hdfRead(EXT_Path,excode,symbol,startdate,enddate,'00')
-        SubRule = hdf.hdfRead(EXT_Path,excode,symbol,startdate,enddate,'01')
-        # stitch
-        dom_data = DomRule.merge(RawData,how='left',on=[EXT_Out_Date,EXT_Out_Asset])
-        sub_data = SubRule.merge(RawData,how='left',on=[EXT_Out_Date,EXT_Out_Asset])
-
+        RawData = hdf.hdfRead(EXT_Path,excode,symbol,startdate,enddate,EXT_Period_1)
+        DomRule = hdf.hdfRead(EXT_Path,excode,symbol,startdate,enddate,EXT_Series_0)
+        SubRule = hdf.hdfRead(EXT_Path,excode,symbol,startdate,enddate,EXT_Series_1)
+        dom_data = DomRule.merge(RawData,on=[EXT_Out_Date,EXT_Out_Asset],how='left')
+        sub_data = SubRule.merge(RawData,on=[EXT_Out_Date,EXT_Out_Asset],how='left')
         return dom_data, sub_data
 
 
 if __name__  ==  '__main__':
 
     a = HisDayData()
-    a.getRawData('20170101','20171231',True)
+    # a.getData('20170101','20171231',True)
+    dom_data, sub_data = a.getStitchData('CFE','IF','20170101','20171231')
+

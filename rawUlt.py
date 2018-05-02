@@ -32,7 +32,7 @@ EXT_SHFE_BU = 'BU'
 EXT_SHFE_HC = 'HC'
 EXT_SHFE_NI = 'NI'
 EXT_SHFE_SN = 'SN'
-EXT_SHFE_ALL = ['CU','AL','ZN','RU','FU','AU','AG','RB','WR','PB','BU','HC','NI','SN']
+EXT_SHFE_ALL = ['CU','AL','ZN','RU','AU','AG','RB','WR','PB','BU','HC','NI','SN'] #'FU'
 # code for Commodity/finance Future in DCE
 EXT_DCE_A = 'A'
 EXT_DCE_B = 'B'
@@ -70,6 +70,7 @@ EXT_CZCE_JR = 'JR'
 EXT_CZCE_SF = 'SF'
 EXT_CZCE_SM = 'SM'
 EXT_CZCE_ALL = ['PM','WH','CF','SR','OI','TA','RI','LR','MA','FG','RS','RM','TC','ZC','JR','SF','SM']
+
 
 # Wind filename
 EXT_CFE_DATA_FILE = 'filesync.CIndexFuturesEODPrices'
