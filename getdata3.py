@@ -5,11 +5,6 @@ import re
 from putdata import HdfUtility
 
 path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
-CFEcode = ('IF','IC','IH','TF','T')
-SHFcode = ('CU','AL','ZN','RU','FU','AU','AG','RB','WR','PB','BU','HC','NI','SN')
-DCEcode = ('A','B','M','C','Y','P','L','V','J','I','JM','JD','FB','BB','PP','CS')
-CZCcode = ('PM','WH','CF','SR','OI','TA','RI','LR','MA','FG','RS','RM','TC','ZC','JR','SF','SM')
-Allcode = CFEcode + SHFcode + DCEcode + CZCcode
 
 
 # CCommodityFuturesEODPrices：date vt preSettle open high low close volumn openinterest
@@ -202,7 +197,7 @@ if __name__  ==  '__main__':
     AssetData = {}
     Dom_data = {}
     Sub_data = {}
-    startdate = '20160101'
+    startdate = '20170101'
     enddate = '20171231'
     for exch,asset in AssetList.items():
         for i in range(len(asset)):

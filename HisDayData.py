@@ -12,6 +12,7 @@ class HisDayData:
         self.cursor = db.cursor()
 
     def getRawData(self,startdate,enddate,is_save=False):
+        AssetList = {}
         AssetList[EXT_EXCHANGE_CFE] = EXT_CFE_ALL
         AssetList[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
         AssetList[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
@@ -20,11 +21,10 @@ class HisDayData:
         for exch,asset in AssetList.items():
             for i in range(len(asset)):
                 print(asset[i])
-                AssetData[asset[i]] = getQuoteWind(exch,asset[i],startdate,enddate)
+                AssetData[asset[i]] = self.getQuoteWind(exch,asset[i],startdate,enddate)
                 if is_save == True:
                     hdf = HdfUtility()
                     hdf.hdfWrite(path,exch,asset[i],startdate,enddate,AssetData[asset[i]],EXT_Period_1)
-        return AssetData
 
     def getQuoteWind(self,excode,symbol,startdate,enddate):
         if symbol in EXT_CFE_ALL:
@@ -39,14 +39,19 @@ class HisDayData:
             print("Wrong Symbol")
             return
         l = 3 if symbol in EXT_DCE_ALL else 4
-        sql = ''' select '''+EXT_In_Header+''' from '''+exchmarkt+
-        ''' where '''+EXT_Wind_Date+''' >= '''+startdate+''' and '''+EXT_Wind_Date+''' <= '''+enddate+" and regexp_like("+EXT_Wind_Asset+", '"+'^'+symbol+str('[0-9]{')+str(l)+"}')"+'''
+        sql = ''' select '''+EXT_In_Header+''' from '''+exchmarkt+'''
+        where '''+EXT_In_Date+''' >= '''+startdate+''' and '''+EXT_In_Date+''' <= '''+enddate+" and regexp_like("+EXT_In_Asset+", '"+'^'+symbol+str('[0-9]{')+str(l)+"}')"+'''
         order by trade_dt'''
         self.cursor.execute(sql)
         raw_data = self.cursor.fetchall()
         raw_data = pd.DataFrame(raw_data)
-        raw_data.columns = EXT_Out_Header.split(',')
-        raw_data = raw_data.sort_values(by = [EXT_OUT_Date,EXT_OUT_Asset])
+        try:
+            raw_data.columns = EXT_Out_Header.split(',')
+        except ValueError:
+            print("No rawdata found")
+            return
+        raw_data = raw_data.sort_values(by = [EXT_Out_Date,EXT_Out_Asset])
+        
         return raw_data
 
     def futureDelistdate(self):
@@ -194,22 +199,6 @@ class HisDayData:
 
 
 if __name__  ==  '__main__':
-    AssetList = {}
-    AssetList['CFE']=['IF','IC','IH'] #'TF','T']
-    AssetList['SHF']=['CU','AL','ZN','RU','AU','AG','RB','WR','PB','BU','HC','NI','SN'] #'FU'
-    # AssetList['DCE']=['A','B','M','C','Y','P','L','V','J','I','JM','JD','FB','BB','PP','CS']
-    # AssetList['CZC']=['SR','OI','TA','RI','LR','MA','FG','RS','RM','TC','ZC','JR','SF','SM'] #'PM' 'WH' 'CF'
-    AssetData = {}
-    Dom_data = {}
-    Sub_data = {}
-    startdate = '20160101'
-    enddate = '20171231'
-    for exch,asset in AssetList.items():
-        for i in range(len(asset)):
-            print(asset[i])
-            AssetData[asset[i]] = HisDayData(exch,asset[i],startdate,enddate)
-            AssetData[asset[i]].getStitchRule(AssetData[asset[i]].getRawData(True),True)
 
-            # AssetData[asset[i]].getStitchRule(True)
-    #a = HisDayData('CZC','RS','20170101','20171231')
-    #a.getStitchRule(a.getRawData(True),True)
+    a = HisDayData()
+    a.getRawData('20170101','20171231')
