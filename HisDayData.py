@@ -2,7 +2,7 @@ import cx_Oracle
 import pandas as pd
 import numpy as np
 import re
-from putdata import HdfUtility
+from HdfUtility import *
 from rawUlt import *
 
 class HisDayData:
@@ -24,7 +24,7 @@ class HisDayData:
                 AssetData[asset[i]] = self.getQuoteWind(exch,asset[i],startdate,enddate)
                 if is_save == True:
                     hdf = HdfUtility()
-                    hdf.hdfWrite(path,exch,asset[i],startdate,enddate,AssetData[asset[i]],EXT_Period_1)
+                    hdf.hdfWrite(EXT_Path,exch,asset[i],startdate,enddate,AssetData[asset[i]],EXT_Period_1)
 
     def getQuoteWind(self,excode,symbol,startdate,enddate):
         if symbol in EXT_CFE_ALL:
@@ -51,7 +51,7 @@ class HisDayData:
             print("No rawdata found")
             return
         raw_data = raw_data.sort_values(by = [EXT_Out_Date,EXT_Out_Asset])
-        
+
         return raw_data
 
     def futureDelistdate(self):
@@ -156,8 +156,8 @@ class HisDayData:
         sub_code = self.getAdjFactor(raw_data,sub_code)
         if save_hdf == True:
             hdf = HdfUtility()
-            hdf.hdfWrite(path,self.excode, self.vt, self.startdate, self.enddate,dom_code,'00')
-            hdf.hdfWrite(path,self.excode, self.vt, self.startdate, self.enddate,sub_code,'01')
+            hdf.hdfWrite(EXT_Path,self.excode, self.vt, self.startdate, self.enddate,dom_code,'00')
+            hdf.hdfWrite(EXT_Path,self.excode, self.vt, self.startdate, self.enddate,sub_code,'01')
         return dom_code,sub_code
 
 
@@ -184,13 +184,13 @@ class HisDayData:
         code = code.fillna(value = 1) # 第一个调整因子为1
         return code
 
-    def getStitchData(self):
+    def getStitchData(self,excode,symbol,startdate,enddate):
         hdf = HdfUtility()
         # 读RawData
-        RawData = hdf.hdfRead(path,self.excode, self.vt, self.startdate, self.enddate,'1d')
+        RawData = hdf.hdfRead(EXT_Path,excode,symbol,startdate,enddate,'1d')
         # 读Rule
-        DomRule = hdf.hdfRead(path,self.excode, self.vt, self.startdate, self.enddate,'00')
-        SubRule = hdf.hdfRead(path,self.excode, self.vt, self.startdate, self.enddate,'01')
+        DomRule = hdf.hdfRead(EXT_Path,excode,symbol,startdate,enddate,'00')
+        SubRule = hdf.hdfRead(EXT_Path,excode,symbol,startdate,enddate,'01')
         # stitch
         dom_data = DomRule.merge(RawData,how='left',on=[EXT_Out_Date,EXT_Out_Asset])
         sub_data = SubRule.merge(RawData,how='left',on=[EXT_Out_Date,EXT_Out_Asset])
@@ -201,4 +201,4 @@ class HisDayData:
 if __name__  ==  '__main__':
 
     a = HisDayData()
-    a.getRawData('20170101','20171231')
+    a.getRawData('20170101','20171231',True)
