@@ -4,50 +4,62 @@ Created on Mon Apr 23 11:17:08 2018
 
 @author: SHIYI
 """
-
 import cx_Oracle
 import pandas as pd
 import numpy as np
-import h5py
 import re
+from HDFutility import HDFutility
 
+path = 'E:\\work\\vnpy-1.7\\out9.hdf5'
 CFEcode = ('IF','IC','IH','TF','T')
 SHFcode = ('CU','AL','ZN','RU','FU','AU','AG','RB','WR','PB','BU','HC','NI','SN')
 DCEcode = ('A','B','M','C','Y','P','L','V','J','I','JM','JD','FB','BB','PP','CS')
 CZCcode = ('PM','WH','CF','SR','OI','TA','RI','LR','MA','FG','RS','RM','TC','ZC','JR','SF','SM')
 Allcode = CFEcode + SHFcode + DCEcode + CZCcode
+
+
 # CCommodityFuturesEODPrices：date vt preSettle open high low close volumn openinterest
 class HisDayData:
 
-    def __init__(self,vt,startdate,enddate):
+    def __init__(self,excode,vt,startdate,enddate):
+        self.excode = excode
         self.vt = vt
         self.startdate = startdate
         self.enddate = enddate
         db = cx_Oracle.connect('fe','fe','192.168.100.22:1521/winddb')
         self.cursor = db.cursor()
-        self.trade_data = self.GetRawData()
-#------------------------------------------------------------------------------
-    def GetRawData(self):
-        '''读取日交易数据'''
+
+    def GetRawData(self,save_hdf=False):
         l=4
         if self.vt in CFEcode:
-            exchmarkt = 'filesync.CIndexFuturesEODPrices'
+            if self.vt in ['TF','T']:
+                exchmarkt = 'filesync.CBondFuturesEODPrices'
+            else:
+                exchmarkt = 'filesync.CIndexFuturesEODPrices'
         else:
             exchmarkt = 'filesync.CCommodityFuturesEODPrices'
-            if self.vt in DCEcode :
+            if self.vt in (CZCcode):
                 l=3
-        sql = '''select s_info_windcode,trade_dt,
+        sql = '''select trade_dt,s_info_windcode,
         s_dq_presettle,s_dq_open,s_dq_high,s_dq_low,s_dq_close,s_dq_volume,s_dq_oi from '''+exchmarkt+'''
         where trade_dt>= '''+self.startdate+''' and trade_dt<= '''+self.enddate+" and regexp_like(s_info_windcode, '"+'^'+self.vt+str('[0-9]{')+str(l)+"}')"+'''
-        and fs_info_type = '2'
         order by trade_dt'''
         self.cursor.execute(sql)
-        trade_data = self.cursor.fetchall()
-        trade_data = pd.DataFrame(trade_data)
-        trade_data.columns = [i[0] for i in self.cursor.description]
-        trade_data = trade_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE'])
-        return trade_data
-#------------------------------------------------------------------------------
+        raw_data = self.cursor.fetchall()
+        raw_data = pd.DataFrame(raw_data)
+        raw_data.columns = [i[0] for i in self.cursor.description]
+        raw_data = raw_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE'])
+        if self.vt in (CZCcode):
+            #下面把所有郑州商品交易所原始数据三位数合约代码改为四位数
+            code_num = pd.Series([re.findall(r"\d*",raw_data['S_INFO_WINDCODE'][i])[2] for i in range(len(raw_data['S_INFO_WINDCODE']))])
+            raw_len = pd.Series([len(code_num[i]) for i in range(len(code_num))])
+            raw_data['S_INFO_WINDCODE'].ix[raw_len == 3] = self.vt+'1'+code_num.ix[raw_len == 3]+'.CZC'
+            raw_data['S_INFO_WINDCODE'].ix[raw_len == 4] = self.vt+code_num.ix[raw_len == 4]+'.CZC'
+        if save_hdf == True:
+            hdf = HDFutility()
+            hdf.HDFwrite(path,self.excode, self.vt, self.startdate, self.enddate,raw_data,'1d')
+        return raw_data
+
     def future_delistdate(self):
         # 获取合约退市日期
         sql = '''select fs_info_sccode,
@@ -59,11 +71,17 @@ class HisDayData:
         self.cursor.execute(sql)
         delistdate = pd.DataFrame(self.cursor.fetchall())
         delistdate.columns = [i[0] for i in self.cursor.description]
+        if self.vt in (CZCcode):
+            #下面把所有郑州商品交易所原始数据三位数合约代码改为四位数
+            code_num = pd.Series([re.findall(r"\d*",delistdate['S_INFO_WINDCODE'][i])[2] for i in range(len(delistdate['S_INFO_WINDCODE']))])
+            delist_len = pd.Series([len(code_num[i]) for i in range(len(code_num))])
+            delistdate['S_INFO_WINDCODE'].ix[delist_len == 3] = self.vt+'1'+code_num.ix[delist_len == 3]+'.CZC'
+            delistdate['S_INFO_WINDCODE'].ix[delist_len == 4] = self.vt+code_num.ix[delist_len == 4]+'.CZC'
+        
         return delistdate
-#------------------------------------------------------------------------------
-    def GetStitchRule(self):
-        trade_data = self.GetRawData()
-        trade_sort = trade_data.sort_values(by = ['TRADE_DT','S_DQ_OI'], ascending = [1,0])
+
+    def GetStitchRule(self,raw_data,save_hdf=False):
+        trade_sort = raw_data.sort_values(by = ['TRADE_DT','S_DQ_OI'], ascending = [1,0])
         delistdate = self.future_delistdate()
         # 取持仓量前三合约的时间、代码 maxOI subOI
         maxOI = trade_sort.groupby('TRADE_DT').nth(0).reset_index()[['TRADE_DT','S_INFO_WINDCODE']]
@@ -112,13 +130,13 @@ class HisDayData:
             dom_check4 = []
             for i in range(len(dom_code['S_INFO_WINDCODE'])):
                 dom_check4.append(dom_code['S_INFO_WINDCODE'][i]<dom_code['S_INFO_WINDCODE'][:i+1].max())
-            dom_check4 = pd.Series(dom_check4)        
+            dom_check4 = pd.Series(dom_check4)
             dom_code['S_INFO_WINDCODE'].ix[dom_check4] = None
             dom_code = dom_code.fillna(method = 'ffill')
             sub_check4 = []
             for i in range(len(sub_code['S_INFO_WINDCODE'])):
                 sub_check4.append(sub_code['S_INFO_WINDCODE'][i]<sub_code['S_INFO_WINDCODE'][:i+1].max())
-            sub_check4 = pd.Series(sub_check4)        
+            sub_check4 = pd.Series(sub_check4)
             sub_code['S_INFO_WINDCODE'].ix[sub_check4] = None
             sub_code = sub_code.fillna(method = 'ffill')
         #--------------------------------------------------------------------------------
@@ -126,6 +144,11 @@ class HisDayData:
         dom_code['S_INFO_WINDCODE'] = dom_code['S_INFO_WINDCODE'].shift(3)
         sub_code['S_INFO_WINDCODE'] = sub_code['S_INFO_WINDCODE'].shift(3)
         dom_code['S_INFO_WINDCODE'] = dom_code['S_INFO_WINDCODE'].fillna(method = 'bfill')
+        sub_code['S_INFO_WINDCODE'] = sub_code['S_INFO_WINDCODE'].fillna(method = 'bfill')
+        #----------------------------------------------------------------------
+        #主力合约如果和次力合约相同，从后向前填充
+        check = (dom_code['S_INFO_WINDCODE'] == sub_code['S_INFO_WINDCODE'])
+        sub_code['S_INFO_WINDCODE'].ix[check] = None
         sub_code['S_INFO_WINDCODE'] = sub_code['S_INFO_WINDCODE'].fillna(method = 'bfill')
         #----------------------------------------------------------------------
         #合并退市数据
@@ -139,22 +162,22 @@ class HisDayData:
         #向前填充，主力合约向后递延
         dom_code['S_INFO_WINDCODE'] = dom_code['S_INFO_WINDCODE'].fillna(method = 'bfill')
         sub_code['S_INFO_WINDCODE'] = sub_code['S_INFO_WINDCODE'].fillna(method = 'bfill')
-        #----------------------------------------------------------------------
-        #主力合约如果和次力合约相同，从后向前填充
-        check = (dom_code['S_INFO_WINDCODE'] == sub_code['S_INFO_WINDCODE'])
-        sub_code['S_INFO_WINDCODE'].ix[check] = None
-        sub_code['S_INFO_WINDCODE'] = sub_code['S_INFO_WINDCODE'].fillna(method = 'bfill')
-        #----------------------------------------------------------------------
-        #删除 
+        #-------------------------------------------------------------------------------------
+        #删除
         dom_code.drop(['FS_INFO_SCCODE','S_INFO_LISTDATE','S_INFO_DELISTDATE'],axis=1,inplace = True)
         sub_code.drop(['FS_INFO_SCCODE','S_INFO_LISTDATE','S_INFO_DELISTDATE'],axis=1,inplace = True)
         #----------------------------------------------------------------------
         # 获取调整因子的数据
-        dom_code = self.get_adj_factor(dom_code)
-        sub_code = self.get_adj_factor(sub_code)
+        dom_code = self.get_adj_factor(raw_data,dom_code)
+        sub_code = self.get_adj_factor(raw_data,sub_code)
+        if save_hdf == True:
+            hdf = HDFutility()
+            hdf.HDFwrite(path,self.excode, self.vt, self.startdate, self.enddate,dom_code,'00')
+            hdf.HDFwrite(path,self.excode, self.vt, self.startdate, self.enddate,sub_code,'01')
         return dom_code,sub_code
 
-    def get_adj_factor(self,code):
+
+    def get_adj_factor(self,raw_data,code):
         # 找到切换点 lead lag
         lead = code['S_INFO_WINDCODE'].shift(-1) != code['S_INFO_WINDCODE']
         lag = code['S_INFO_WINDCODE'].shift(1) != code['S_INFO_WINDCODE']
@@ -162,10 +185,10 @@ class HisDayData:
         lag.iloc[0] = False
         temp1 = pd.concat([code[lead].reset_index().drop(columns='index'),code[lag].reset_index().drop(columns=['index','TRADE_DT'])],axis=1)
         temp1.columns = ['TRADE_DT','old','new']
-        temp2 = temp1.merge(self.trade_data[['TRADE_DT','S_INFO_WINDCODE','S_DQ_CLOSE']],left_on=['TRADE_DT','old'],right_on=['TRADE_DT','S_INFO_WINDCODE'])
+        temp2 = temp1.merge(raw_data[['TRADE_DT','S_INFO_WINDCODE','S_DQ_CLOSE']],left_on=['TRADE_DT','old'],right_on=['TRADE_DT','S_INFO_WINDCODE'])
         del temp2['S_INFO_WINDCODE']
         temp2 = temp2.rename(columns={'S_DQ_CLOSE':'oldclose'})
-        temp3 = temp2.merge(self.trade_data[['TRADE_DT','S_INFO_WINDCODE','S_DQ_CLOSE']],left_on=['TRADE_DT','new'],right_on=['TRADE_DT','S_INFO_WINDCODE'])
+        temp3 = temp2.merge(raw_data[['TRADE_DT','S_INFO_WINDCODE','S_DQ_CLOSE']],left_on=['TRADE_DT','new'],right_on=['TRADE_DT','S_INFO_WINDCODE'])
         del temp3['S_INFO_WINDCODE']
         temp3 = temp3.rename(columns={'S_DQ_CLOSE':'newclose'})
         # t时主力合约从C1切换成C2，adj_factor = C1_Close(t-1)/C2_Close(t-1)
@@ -178,15 +201,33 @@ class HisDayData:
         return code
 
     def GetStitchData(self):
+        hdf = HDFutility()
         # 读RawData
-        # 载Rule
-        dom_code, sub_code = self.GetStitchRule()
-        # stich
+        RawData = hdf.HDFread(path,self.excode, self.vt, self.startdate, self.enddate,'1d')
+        # 读Rule
+        DomRule = hdf.HDFread(path,self.excode, self.vt, self.startdate, self.enddate,'00')
+        SubRule = hdf.HDFread(path,self.excode, self.vt, self.startdate, self.enddate,'01')
+        # stitch
+        dom_data = DomRule.merge(RawData,how='left',on=['TRADE_DT','S_INFO_WINDCODE'])
+        sub_data = SubRule.merge(RawData,how='left',on=['TRADE_DT','S_INFO_WINDCODE'])
 
-        return StitchData
-        
+        return dom_data, sub_data
+
+
 if __name__  ==  '__main__':
-    a = HisDayData('B','20170101','20171231')
-    trade_data = a.GetRawData()
-    dom_code, sub_code = a.GetStitchRule()
-#    StitchData = a.GetStitchData()
+    AssetList = {}
+    AssetList['CFE']=['IF','IC','IH','TF','T']
+    AssetList['SHF']=['CU','AL','ZN','RU','AU','AG','RB','WR','PB','BU','HC','NI','SN'] #'FU'
+    AssetList['DCE']=['A','B','M','C','Y','P','L','V','J','I','JM','JD','FB','BB','PP','CS']
+    AssetList['CZC']=['SR','TA','LR','FG','RM','JR','SF','SM','CF'] #'OI''RI''MA''RS''TC''ZC''PM''WH'只能从2012年9月17日开始计算，因为前面交易实在太不稳定了
+    AssetData = {}
+    Dom_data = {}
+    Sub_data = {}
+    startdate = '20100101'
+    enddate = '20171231'
+    for exch,asset in AssetList.items():
+        for i in range(len(asset)):
+            print(asset[i])
+            AssetData[asset[i]] = HisDayData(exch,asset[i],startdate,enddate)
+            Dom_data[asset[i]],Sub_data[asset[i]] = AssetData[asset[i]].GetStitchRule(AssetData[asset[i]].GetRawData(True),True)
+
