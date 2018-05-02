@@ -2,7 +2,7 @@ import cx_Oracle
 import pandas as pd
 import numpy as np
 import re
-from putdata import HDFutility
+from putdata import HdfUtility
 
 path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
 CFEcode = ('IF','IC','IH','TF','T')
@@ -23,7 +23,7 @@ class HisDayData:
         db = cx_Oracle.connect('fe','fe','192.168.100.22:1521/winddb')
         self.cursor = db.cursor()
 
-    def GetRawData(self,save_hdf=False):
+    def getRawData(self,save_hdf=False):
         l=4
         if self.vt in CFEcode:
             exchmarkt = 'filesync.CIndexFuturesEODPrices'
@@ -42,11 +42,11 @@ class HisDayData:
         raw_data.columns = [i[0] for i in self.cursor.description]
         raw_data = raw_data.sort_values(by = ['TRADE_DT','S_INFO_WINDCODE'])
         if save_hdf == True:
-            hdf = HDFutility()
-            hdf.HDFwrite(path,self.excode, self.vt, self.startdate, self.enddate,raw_data,'1d')
+            hdf = HdfUtility()
+            hdf.hdfWrite(path,self.excode, self.vt, self.startdate, self.enddate,raw_data,'1d')
         return raw_data
 
-    def future_delistdate(self):
+    def futureDelistdate(self):
         # 获取合约退市日期
         sql = '''select fs_info_sccode,
         s_info_windcode,
@@ -59,9 +59,9 @@ class HisDayData:
         delistdate.columns = [i[0] for i in self.cursor.description]
         return delistdate
 
-    def GetStitchRule(self,raw_data,save_hdf=False):
+    def getStitchRule(self,raw_data,save_hdf=False):
         trade_sort = raw_data.sort_values(by = ['TRADE_DT','S_DQ_OI'], ascending = [1,0])
-        delistdate = self.future_delistdate()
+        delistdate = self.futureDelistdate()
         # 取持仓量前三合约的时间、代码 maxOI subOI
         maxOI = trade_sort.groupby('TRADE_DT').nth(0).reset_index()[['TRADE_DT','S_INFO_WINDCODE']]
         subOI = trade_sort.groupby('TRADE_DT').nth(1).reset_index()[['TRADE_DT','S_INFO_WINDCODE']]
@@ -147,16 +147,16 @@ class HisDayData:
         sub_code.drop(['FS_INFO_SCCODE','S_INFO_LISTDATE','S_INFO_DELISTDATE'],axis=1,inplace = True)
         #----------------------------------------------------------------------
         # 获取调整因子的数据
-        dom_code = self.get_adj_factor(raw_data,dom_code)
-        sub_code = self.get_adj_factor(raw_data,sub_code)
+        dom_code = self.getAdjFactor(raw_data,dom_code)
+        sub_code = self.getAdjFactor(raw_data,sub_code)
         if save_hdf == True:
-            hdf = HDFutility()
-            hdf.HDFwrite(path,self.excode, self.vt, self.startdate, self.enddate,dom_code,'00')
-            hdf.HDFwrite(path,self.excode, self.vt, self.startdate, self.enddate,sub_code,'01')
+            hdf = HdfUtility()
+            hdf.hdfWrite(path,self.excode, self.vt, self.startdate, self.enddate,dom_code,'00')
+            hdf.hdfWrite(path,self.excode, self.vt, self.startdate, self.enddate,sub_code,'01')
         return dom_code,sub_code
 
 
-    def get_adj_factor(self,raw_data,code):
+    def getAdjFactor(self,raw_data,code):
         # 找到切换点 lead lag
         lead = code['S_INFO_WINDCODE'].shift(-1) != code['S_INFO_WINDCODE']
         lag = code['S_INFO_WINDCODE'].shift(1) != code['S_INFO_WINDCODE']
@@ -179,13 +179,13 @@ class HisDayData:
         code = code.fillna(value = 1) # 第一个调整因子为1
         return code
 
-    def GetStitchData(self):
-        hdf = HDFutility()
+    def getStitchData(self):
+        hdf = HdfUtility()
         # 读RawData
-        RawData = hdf.HDFread(path,self.excode, self.vt, self.startdate, self.enddate,'1d')
+        RawData = hdf.hdfRead(path,self.excode, self.vt, self.startdate, self.enddate,'1d')
         # 读Rule
-        DomRule = hdf.HDFread(path,self.excode, self.vt, self.startdate, self.enddate,'00')
-        SubRule = hdf.HDFread(path,self.excode, self.vt, self.startdate, self.enddate,'01')
+        DomRule = hdf.hdfRead(path,self.excode, self.vt, self.startdate, self.enddate,'00')
+        SubRule = hdf.hdfRead(path,self.excode, self.vt, self.startdate, self.enddate,'01')
         # stitch
         dom_data = DomRule.merge(RawData,how='left',on=['TRADE_DT','S_INFO_WINDCODE'])
         sub_data = SubRule.merge(RawData,how='left',on=['TRADE_DT','S_INFO_WINDCODE'])
@@ -197,19 +197,19 @@ if __name__  ==  '__main__':
     AssetList = {}
     AssetList['CFE']=['IF','IC','IH'] #'TF','T']
     AssetList['SHF']=['CU','AL','ZN','RU','AU','AG','RB','WR','PB','BU','HC','NI','SN'] #'FU'
-    AssetList['DCE']=['A','B','M','C','Y','P','L','V','J','I','JM','JD','FB','BB','PP','CS']
+    # AssetList['DCE']=['A','B','M','C','Y','P','L','V','J','I','JM','JD','FB','BB','PP','CS']
     # AssetList['CZC']=['SR','OI','TA','RI','LR','MA','FG','RS','RM','TC','ZC','JR','SF','SM'] #'PM' 'WH' 'CF'
     AssetData = {}
     Dom_data = {}
     Sub_data = {}
-    startdate = '20170101'
+    startdate = '20160101'
     enddate = '20171231'
     for exch,asset in AssetList.items():
         for i in range(len(asset)):
             print(asset[i])
             AssetData[asset[i]] = HisDayData(exch,asset[i],startdate,enddate)
-            AssetData[asset[i]].GetStitchRule(AssetData[asset[i]].GetRawData(True),True)
+            AssetData[asset[i]].getStitchRule(AssetData[asset[i]].getRawData(True),True)
 
-            # AssetData[asset[i]].GetStitchRule(True)
+            # AssetData[asset[i]].getStitchRule(True)
     #a = HisDayData('CZC','RS','20170101','20171231')
-    #a.GetStitchRule(a.GetRawData(True),True)
+    #a.getStitchRule(a.getRawData(True),True)
