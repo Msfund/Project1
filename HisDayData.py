@@ -12,15 +12,15 @@ class HisDayData:
         self.cursor = db.cursor()
 
     def getData(self,startdate,enddate,is_save=False):
-        AssetList = {}
-        AssetList[EXT_EXCHANGE_CFE] = EXT_CFE_ALL
-        AssetList[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
-        AssetList[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
-        # AssetList[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
+        asset_list = {}
+        asset_list[EXT_EXCHANGE_CFE] = EXT_CFE_ALL
+        asset_list[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
+        asset_list[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
+        # asset_list[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
         raw_data = {}
         dom_code = {}
         sub_code = {}
-        for excode,symbol in AssetList.items():
+        for excode,symbol in asset_list.items():
             for i in range(len(symbol)):
                 print(symbol[i])
                 raw_data[symbol[i]] = self.getQuoteWind(excode,symbol[i],startdate,enddate)
