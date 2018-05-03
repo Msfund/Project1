@@ -8,7 +8,7 @@ from rawUlt import *
 class HisDayData:
 
     def __init__(self):
-        db = cx_Oracle.connect(EXT_Wind_User,EXT_Wind_User,EXT_Wind_Link)
+        db = cx_Oracle.connect(EXT_Wind_User,EXT_Wind_Password,EXT_Wind_Link)
         self.cursor = db.cursor()
 
     def getData(self,startdate,enddate,is_save=False):
@@ -74,7 +74,7 @@ class HisDayData:
             return
         raw_data = raw_data.merge(delistdate,on=[EXT_Out_Asset],how='left')
         raw_data = raw_data.sort_values(by = [EXT_Out_Date,EXT_Out_Asset])
-        
+
         return raw_data
 
     def futureDelistdate(self,symbol,startdate):

@@ -22,16 +22,16 @@ HDF
 '''
 class HdfUtility:
     # 读，kind为 '00'、'01'、'1d'
-    def hdfRead(self,path,excode,symbol,startdate,enddate,kind):
+    def hdfRead(self,path,datatype,excode,symbol,startdate,enddate,kind):
         store = HDFStore(path,mode = 'r')
-        key = 'Stitch/'+excode+'/'+symbol+'/Rule/'+kind if kind in [EXT_Series_0,EXT_Series_1] else 'Stitch/'+excode+'/'+symbol+'/Period/'+kind
+        key = datatype+'/'+excode+'/'+symbol+'/Rule/'+kind if kind in [EXT_Series_0,EXT_Series_1] else datatype+'/'+excode+'/'+symbol+'/Period/'+kind
         data = store[key].ix[((store[key][EXT_Out_Date]>=startdate)&(store[key][EXT_Out_Date]<=enddate)),:]
         store.close()
         return data
     # 写, kind为 '00'、'01'、'1d'
-    def hdfWrite(self,path,excode,symbol,startdate,enddate,indata,kind):
+    def hdfWrite(self,path,datatype,excode,symbol,startdate,enddate,indata,kind):
         store = HDFStore(path,mode='a')
-        key = 'Stitch/'+excode+'/'+symbol+'/Rule/'+kind if kind in [EXT_Series_0,EXT_Series_1] else 'Stitch/'+excode+'/'+symbol+'/Period/'+kind
+        key = datatype+'/'+excode+'/'+symbol+'/Rule/'+kind if kind in [EXT_Series_0,EXT_Series_1] else datatype+'/'+excode+'/'+symbol+'/Period/'+kind
         try:
             store[key]
         except KeyError:

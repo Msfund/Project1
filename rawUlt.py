@@ -1,7 +1,12 @@
 
 EXT_Wind_User = 'fe'
+EXT_Wind_Password = 'fe'
 EXT_Wind_Link = '192.168.100.22:1521/winddb'
 EXT_Path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
+EXT_Datatype_Rawdata = 'Rawdata'
+EXT_Datatype_Stitch = 'Stitch'
+EXT_Datatype_Indicator = 'Indicator'
+
 # code of exchange
 EXT_EXCHANGE_CFE  = 'CFE'  #Zhong Jin Suo
 EXT_EXCHANGE_SHFE = 'SHF' #shang hai Suo
