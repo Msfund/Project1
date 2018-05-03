@@ -5,7 +5,7 @@ import re
 from rawUlt import *
 import h5py
 
-pd.set_option('io.hdf.default_format','table')
+# pd.set_option('io.hdf.default_format','table')
 '''
 HDF
     /Stitch

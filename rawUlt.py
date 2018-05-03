@@ -69,7 +69,7 @@ EXT_CZCE_ZC = 'ZC'
 EXT_CZCE_JR = 'JR'
 EXT_CZCE_SF = 'SF'
 EXT_CZCE_SM = 'SM'
-EXT_CZCE_ALL = ['PM','WH','CF','SR','OI','TA','RI','LR','MA','FG','RS','RM','TC','ZC','JR','SF','SM']
+EXT_CZCE_ALL = ['PM','WH','CF','SR','OI','TA','RI','LR','MA','FG','RS','RM','TC','ZC','JR','SF','SM'] 
 
 
 # Wind filename

@@ -16,7 +16,7 @@ class HisDayData:
         AssetList[EXT_EXCHANGE_CFE] = EXT_CFE_ALL
         AssetList[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
         AssetList[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
-        AssetList[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
+        # AssetList[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
         AssetData = {}
         DomCode = {}
         SubCode = {}
@@ -207,7 +207,6 @@ class HisDayData:
         sub_data = SubRule.merge(RawData,on=[EXT_Out_Date,EXT_Out_Asset],how='left')
         dom_data.sort_values(by=[EXT_Out_Date,EXT_Out_Asset],inplace=True)
         sub_data.sort_values(by=[EXT_Out_Date,EXT_Out_Asset],inplace=True)
-
         return dom_data, sub_data
 
 
