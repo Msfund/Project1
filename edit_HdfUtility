@@ -3,7 +3,7 @@ class HdfUtility:
     def hdfRead(self,path,excode,symbol,startdate,enddate,kind):
         store = HDFStore(path,mode = 'r')
         key = 'Stitch/'+excode+'/'+symbol+'/Rule/'+kind if kind in [EXT_Series_0,EXT_Series_1] else 'Stitch/'+excode+'/'+symbol+'/Period/'+kind
-        data = store[key].ix[((store[key][EXT_Out_Date]>=startdate)&(store[key][EXT_Out_Date]<=enddate)),:]
+        data = store[key].ix[((store[key][EXT_Out_Date]>=pd.to_datetime(startdate))&(store[key][EXT_Out_Date]<=pd.to_datetime(enddate))),:]
         store.close()
         return data
     # 写, kind为 '00'、'01'、'1d'
@@ -27,7 +27,7 @@ class HdfUtility:
             f = h5py.File(path,'a')
             fromdate = f[key].attrs['From_date']
             todate = f[key].attrs['To_date']
-            adddata = indata[pd.concat([indata[EXT_Out_Date] < fromdate,indata[EXT_Out_Date] > todate],axis=1).any(axis=1)]
+            adddata = indata[pd.concat([indata[EXT_Out_Date] < pd.to_datetime(fromdate),indata[EXT_Out_Date] > pd.to_datetime(todate)],axis=1).any(axis=1)]
             if adddata.shape[0] == 0:
                 ##如果已有数据，则不需要添加
                 print("No data added")
