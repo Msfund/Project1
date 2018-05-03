@@ -205,12 +205,14 @@ class HisDayData:
         SubRule = hdf.hdfRead(EXT_Path,excode,symbol,startdate,enddate,EXT_Series_1)
         dom_data = DomRule.merge(RawData,on=[EXT_Out_Date,EXT_Out_Asset],how='left')
         sub_data = SubRule.merge(RawData,on=[EXT_Out_Date,EXT_Out_Asset],how='left')
+        dom_data.sort_values(by=[EXT_Out_Date,EXT_Out_Asset],inplace=True)
+        sub_data.sort_values(by=[EXT_Out_Date,EXT_Out_Asset],inplace=True)
+
         return dom_data, sub_data
 
 
 if __name__  ==  '__main__':
 
     a = HisDayData()
-    # a.getData('20170101','20171231',True)
+    a.getData('20160601','20171231',True)
     dom_data, sub_data = a.getStitchData('CFE','IF','20170101','20171231')
-
