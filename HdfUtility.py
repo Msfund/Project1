@@ -4,7 +4,7 @@ from pandas.io.pytables import HDFStore
 import re
 from rawUlt import *
 import h5py
-# pd.set_option('io.hdf.default_format','f')
+pd.set_option('io.hdf.default_format','table')
 '''
 HDF
     /Stitch
@@ -49,6 +49,8 @@ class HdfUtility:
             if adddata.shape[0] == 0:
                 print("No data added")
             else:
+                if kind in [EXT_Series_0,EXT_Series_1]:
+                    adddata[EXT_Out_AdjFactor] = adddata[EXT_Out_AdjFactor]*store[key][EXT_Out_AdjFactor].iloc[-1]/adddata[EXT_Out_AdjFactor].iloc[0]
                 store.append(key,adddata)
                 f[key].attrs['From_date'] = min(startdate,fromdate)
                 f[key].attrs['To_date'] = max(enddate,todate)

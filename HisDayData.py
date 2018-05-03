@@ -206,5 +206,5 @@ class HisDayData:
 
 if __name__  ==  '__main__':
     a = HisDayData()
-    a.getData('20170101','20171231',is_save=True)
-    dom_data, sub_data = a.getStitchData('CFE','IF','20170101','20171231')
+    a.getData('20160101','20161231',is_save=True)
+    dom_data, sub_data = a.getStitchData('CFE','IF','20160101','20171231')

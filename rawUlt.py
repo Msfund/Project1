@@ -15,6 +15,7 @@ EXT_CFE_T  = 'T'
 EXT_CFE_TF = 'TF'
 EXT_CFE_STOCK = ['IF','IC','IH']
 EXT_CFE_BOND=['TF','T']
+EXT_CFE_ALL=EXT_CFE_STOCK+EXT_CFE_BOND
 # code for Commodity/finance Future in SHFE
 EXT_SHFE_CU = 'CU'
 EXT_SHFE_AL = 'AL'
