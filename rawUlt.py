@@ -16,7 +16,8 @@ EXT_CFE_IH = 'IH'
 EXT_CFE_IC = 'IC'
 EXT_CFE_T  = 'T'
 EXT_CFE_TF = 'TF'
-EXT_CFE_ALL = ['IF','IC','IH','TF','T']
+EXT_CFE_STOCK = ['IF','IC','IH']
+EXT_CFE_BOND=['TF','T']
 # code for Commodity/finance Future in SHFE
 EXT_SHFE_CU = 'CU'
 EXT_SHFE_AL = 'AL'
@@ -73,7 +74,8 @@ EXT_CZCE_ALL = ['PM','WH','CF','SR','OI','TA','RI','LR','MA','FG','RS','RM','TC'
 
 
 # Wind filename
-EXT_CFE_DATA_FILE = 'filesync.CIndexFuturesEODPrices'
+EXT_CFE_STOCK_FILE = 'filesync.CIndexFuturesEODPrices'
+EXT_CFE_BOND_FILE = 'filesync.CBondFuturesEODPrices'
 EXT_SHFE_DATA_FILE = 'filesync.CCommodityFuturesEODPrices'
 EXT_DCE_DATA_FILE = 'filesync.CCommodityFuturesEODPrices'
 EXT_CZCE_DATA_FILE = 'filesync.CCommodityFuturesEODPrices'
