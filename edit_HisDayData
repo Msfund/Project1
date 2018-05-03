@@ -69,6 +69,7 @@ class HisDayData:
             raw_data[EXT_Out_Asset].ix[raw_len == 3] = symbol+'1'+code_num.ix[raw_len == 3]+'.CZC'
             raw_data[EXT_Out_Asset].ix[raw_len == 4] = symbol+code_num.ix[raw_len == 4]+'.CZC'
         raw_data = raw_data.sort_values(by = [EXT_Out_Date,EXT_Out_Asset])
+        #将日期转化
         raw_data[EXT_Out_Date] = pd.to_datetime(raw_data[EXT_Out_Date])
         return raw_data
 
@@ -79,6 +80,7 @@ class HisDayData:
         and '''+EXT_In_Asset+" LIKE'"+symbol+'''%' order by '''+EXT_In_Asset
         self.cursor.execute(sql)
         delistdate = pd.DataFrame(self.cursor.fetchall())
+        #原来是In_Header2改为Out_Header2，下面所有的都是In改为Out,从以下至return delistdat都有修改
         delistdate.columns = EXT_Out_Header2.split(',')
         if symbol in EXT_CZCE_ALL:
             #下面把所有郑州商品交易所原始数据三位数合约代码改为四位数
@@ -112,6 +114,7 @@ class HisDayData:
         dcode = pd.Series([re.findall(r"\d*",dom_code[EXT_Out_Asset][i])[2] for i in range(len(dom_code[EXT_Out_Asset]))])
         scode = pd.Series([re.findall(r"\d*",sub_code[EXT_Out_Asset][i])[2] for i in range(len(sub_code[EXT_Out_Asset]))])
         ###找到dcode等于合约月份的位置（这里比较年份数+月份数），且第一个合约不切换
+        ###以下为新替换部分，记得将原有删除
         dom_code_str = dom_code[EXT_Out_Date].astype(str)
         dom_code_seri = pd.Series([dom_code_str[i][-5:-3]+dom_code_str[i][-2:] for i in range(len(dom_code_str))])
         sub_code_str = sub_code[EXT_Out_Date].astype(str)
@@ -120,12 +123,6 @@ class HisDayData:
         dom_check3[0] = False
         sub_check3 = (scode == sub_code_seri)
         sub_check3[0] = False
-# =============================================================================
-# !!!        dom_check3 = (dcode == dom_code[EXT_Out_Date].str[2:6])
-# !!!        dom_check3[0] = False
-# !!!        sub_check3 = (scode == sub_code[EXT_Out_Date].str[2:6])
-# !!!        sub_check3[0] = False
-# =============================================================================
         ##找到是当月合约且换仓的位置,设置为None 由于主力合约持仓量退市期间将会下降到次主力合约，有3天的判断期
         for i in range(3):
             dom_code[EXT_Out_Asset].ix[dom_loca.shift(i) & dom_check3] = None
