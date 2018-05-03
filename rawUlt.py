@@ -1,15 +1,12 @@
+
 EXT_Wind_User = 'fe'
 EXT_Wind_Link = '192.168.100.22:1521/winddb'
-
-
 EXT_Path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
 # code of exchange
 EXT_EXCHANGE_CFE  = 'CFE'  #Zhong Jin Suo
 EXT_EXCHANGE_SHFE = 'SHF' #shang hai Suo
 EXT_EXCHANGE_DCE  = 'DCE'  #Da Lian Suo
 EXT_EXCHANGE_CZCE = 'CZC' #ZhengZhou Suo
-
-
 # code for Commodity/finance Future in CFE
 EXT_CFE_IF = 'IF'
 EXT_CFE_IH = 'IH'
@@ -70,8 +67,7 @@ EXT_CZCE_ZC = 'ZC'
 EXT_CZCE_JR = 'JR'
 EXT_CZCE_SF = 'SF'
 EXT_CZCE_SM = 'SM'
-EXT_CZCE_ALL = ['PM','WH','CF','SR','OI','TA','RI','LR','MA','FG','RS','RM','TC','ZC','JR','SF','SM'] 
-
+EXT_CZCE_ALL = ['PM','WH','CF','SR','OI','TA','RI','LR','MA','FG','RS','RM','TC','ZC','JR','SF','SM']
 
 # Wind filename
 EXT_CFE_STOCK_FILE = 'filesync.CIndexFuturesEODPrices'

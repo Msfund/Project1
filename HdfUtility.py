@@ -4,8 +4,7 @@ from pandas.io.pytables import HDFStore
 import re
 from rawUlt import *
 import h5py
-
-# pd.set_option('io.hdf.default_format','table')
+# pd.set_option('io.hdf.default_format','f')
 '''
 HDF
     /Stitch
@@ -20,8 +19,6 @@ HDF
                   /15m
                   /60m
                   /1d
-
-    /Indicator
 '''
 class HdfUtility:
     # 读，kind为 '00'、'01'、'1d'

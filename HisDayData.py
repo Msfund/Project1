@@ -4,7 +4,7 @@ import numpy as np
 import re
 from HdfUtility import *
 from rawUlt import *
-# 
+
 class HisDayData:
 
     def __init__(self):
@@ -17,24 +17,23 @@ class HisDayData:
         AssetList[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
         AssetList[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
         # AssetList[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
-        AssetData = {}
-        DomCode = {}
-        SubCode = {}
+        raw_data = {}
+        dom_code = {}
+        sub_code = {}
         for excode,symbol in AssetList.items():
             for i in range(len(symbol)):
                 print(symbol[i])
-                AssetData[symbol[i]] = self.getQuoteWind(excode,symbol[i],startdate,enddate)
-                if AssetData[symbol[i]] is None:
+                raw_data[symbol[i]] = self.getQuoteWind(excode,symbol[i],startdate,enddate)
+                if raw_data[symbol[i]] is None:
                     continue
                 else:
-                    DomCode[symbol[i]],SubCode[symbol[i]] = self.getStitchRule(excode,symbol[i],startdate,enddate,AssetData[symbol[i]])
+                    dom_code[symbol[i]],sub_code[symbol[i]] = self.getStitchRule(excode,symbol[i],startdate,enddate,raw_data[symbol[i]])
                 if is_save == True:
                     hdf = HdfUtility()
-                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,DomCode[symbol[i]],EXT_Series_0)
-                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,SubCode[symbol[i]],EXT_Series_1)
-                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Period_1)
-        return AssetData,DomCode,SubCode
-
+                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,dom_code[symbol[i]],EXT_Series_0)
+                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,sub_code[symbol[i]],EXT_Series_1)
+                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,raw_data[symbol[i]],EXT_Period_1)
+        return raw_data,dom_code,sub_code
 
     def getQuoteWind(self,excode,symbol,startdate,enddate):
         if symbol in EXT_CFE_STOCK:
@@ -60,10 +59,9 @@ class HisDayData:
         try:
             raw_data.columns = EXT_Out_Header.split(',')
         except ValueError:
-            print("No rawdata found")
+            print("No raw_data found")
             return
         raw_data = raw_data.sort_values(by = [EXT_Out_Date,EXT_Out_Asset])
-
         return raw_data
 
     def futureDelistdate(self,symbol,startdate):
@@ -169,9 +167,7 @@ class HisDayData:
         # 获取调整因子的数据
         dom_code = self.getAdjFactor(raw_data,dom_code)
         sub_code = self.getAdjFactor(raw_data,sub_code)
-
         return dom_code,sub_code
-
 
     def getAdjFactor(self,raw_data,code):
         # 找到切换点 lead lag
@@ -198,18 +194,17 @@ class HisDayData:
 
     def getStitchData(self,excode,symbol,startdate,enddate):
         hdf = HdfUtility()
-        RawData = hdf.hdfRead(EXT_Path,excode,symbol,startdate,enddate,EXT_Period_1)
-        DomRule = hdf.hdfRead(EXT_Path,excode,symbol,startdate,enddate,EXT_Series_0)
-        SubRule = hdf.hdfRead(EXT_Path,excode,symbol,startdate,enddate,EXT_Series_1)
-        dom_data = DomRule.merge(RawData,on=[EXT_Out_Date,EXT_Out_Asset],how='left')
-        sub_data = SubRule.merge(RawData,on=[EXT_Out_Date,EXT_Out_Asset],how='left')
+        raw_data = hdf.hdfRead(EXT_Path,excode,symbol,startdate,enddate,EXT_Period_1)
+        dom_rule = hdf.hdfRead(EXT_Path,excode,symbol,startdate,enddate,EXT_Series_0)
+        sub_rule = hdf.hdfRead(EXT_Path,excode,symbol,startdate,enddate,EXT_Series_1)
+        dom_data = dom_rule.merge(raw_data,on=[EXT_Out_Date,EXT_Out_Asset],how='left')
+        sub_data = sub_rule.merge(raw_data,on=[EXT_Out_Date,EXT_Out_Asset],how='left')
         dom_data.sort_values(by=[EXT_Out_Date,EXT_Out_Asset],inplace=True)
         sub_data.sort_values(by=[EXT_Out_Date,EXT_Out_Asset],inplace=True)
         return dom_data, sub_data
 
 
 if __name__  ==  '__main__':
-
     a = HisDayData()
-    a.getData('20160601','20171231',True)
+    a.getData('20170101','20171231',is_save=True)
     dom_data, sub_data = a.getStitchData('CFE','IF','20170101','20171231')
