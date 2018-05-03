@@ -50,18 +50,31 @@ class HisDayData:
             print("Wrong Symbol")
             return
         l = 3 if symbol in EXT_CZCE_ALL else 4
+
         sql = ''' select '''+EXT_In_Header+''' from '''+exchmarkt+'''
         where '''+EXT_In_Date+''' >= '''+startdate+''' and '''+EXT_In_Date+''' <= '''+enddate+" and regexp_like("+EXT_In_Asset+", '"+'^'+symbol+str('[0-9]{')+str(l)+"}')"+'''
         order by trade_dt'''
         self.cursor.execute(sql)
-        raw_data = self.cursor.fetchall()
-        raw_data = pd.DataFrame(raw_data)
+        raw_data = pd.DataFrame(self.cursor.fetchall())
         try:
             raw_data.columns = EXT_Out_Header.split(',')
         except ValueError:
             print("No raw_data found")
             return
+
+        sql = ''' select '''+EXT_In_Header2+''' from '''+EXT_Delistdate_File+'''
+        where '''+EXT_In_Delistdate+''' > '''+startdate+'''
+        and '''+EXT_In_Asset+" LIKE'"+symbol+'''%' order by '''+EXT_In_Asset
+        self.cursor.execute(sql)
+        delistdate = pd.DataFrame(self.cursor.fetchall())
+        try:
+            delistdate.columns = EXT_Out_Header2.split(',')
+        except ValueError:
+            print("No delistdate found")
+            return
+        raw_data = raw_data.merge(delistdate,on=[EXT_Out_Asset],how='left')
         raw_data = raw_data.sort_values(by = [EXT_Out_Date,EXT_Out_Asset])
+        
         return raw_data
 
     def futureDelistdate(self,symbol,startdate):
@@ -205,5 +218,4 @@ class HisDayData:
 
 if __name__  ==  '__main__':
     a = HisDayData()
-    a.getData('20170101','20171231',is_save=True) # 下载数据保存到HDF5文件
-    dom_data, sub_data = a.getStitchData('CFE','IF','20170101','20171231') # 取StitchData
+    raw_data = a.getQuoteWind('CFE','IF','20170101','20171231')
