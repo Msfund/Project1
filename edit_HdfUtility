@@ -1,0 +1,43 @@
+class HdfUtility:
+    # 读，kind为 '00'、'01'、'1d'
+    def hdfRead(self,path,excode,symbol,startdate,enddate,kind):
+        store = HDFStore(path,mode = 'r')
+        key = 'Stitch/'+excode+'/'+symbol+'/Rule/'+kind if kind in [EXT_Series_0,EXT_Series_1] else 'Stitch/'+excode+'/'+symbol+'/Period/'+kind
+        data = store[key].ix[((store[key][EXT_Out_Date]>=startdate)&(store[key][EXT_Out_Date]<=enddate)),:]
+        store.close()
+        return data
+    # 写, kind为 '00'、'01'、'1d'
+    def hdfWrite(self,path,excode,symbol,startdate,enddate,indata,kind):
+        store = HDFStore(path,mode='a')
+        key = 'Stitch/'+excode+'/'+symbol+'/Rule/'+kind if kind in [EXT_Series_0,EXT_Series_1] else 'Stitch/'+excode+'/'+symbol+'/Period/'+kind
+        try:
+            #尝试是否存在该地址
+            store[key]
+        except KeyError:
+            #不存在，则创建新的地址
+            store[key] = indata
+            store.close()
+            f = h5py.File(path,'a')
+            f[key].attrs['From_date'] = startdate
+            f[key].attrs['To_date'] = enddate
+            f.close()
+        else:
+            #已存在，则需要判断是否添加新数据
+            ##读取已有数据的from_date和to_date值
+            f = h5py.File(path,'a')
+            fromdate = f[key].attrs['From_date']
+            todate = f[key].attrs['To_date']
+            adddata = indata[pd.concat([indata[EXT_Out_Date] < fromdate,indata[EXT_Out_Date] > todate],axis=1).any(axis=1)]
+            if adddata.shape[0] == 0:
+                ##如果已有数据，则不需要添加
+                print("No data added")
+            else:
+                ##如果没有数据，则不需要添加
+                if kind in [EXT_Series_0,EXT_Series_1]:
+                    ###如果类型是新增00 or 01，则调整复权因子，保证数据的连贯性
+                    adddata[EXT_Out_AdjFactor] = adddata[EXT_Out_AdjFactor]*store[key][EXT_Out_AdjFactor].iloc[-1]/adddata[EXT_Out_AdjFactor].iloc[0]
+                store.append(key,adddata)
+                f[key].attrs['From_date'] = min(startdate,fromdate)
+                f[key].attrs['To_date'] = max(enddate,todate)
+                f.close()
+        store.close()
