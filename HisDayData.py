@@ -37,8 +37,10 @@ class HisDayData:
 
 
     def getQuoteWind(self,excode,symbol,startdate,enddate):
-        if symbol in EXT_CFE_ALL:
-            exchmarkt = EXT_CFE_DATA_FILE
+        if symbol in EXT_CFE_STOCK:
+            exchmarkt = EXT_CFE_STOCK_FILE
+        elif symbol in EXT_CFE_BOND:
+            exchmarkt = EXT_CFE_BOND_FILE
         elif symbol in EXT_SHFE_ALL:
             exchmarkt = EXT_SHFE_DATA_FILE
         elif symbol in EXT_DCE_ALL:
@@ -48,7 +50,7 @@ class HisDayData:
         else:
             print("Wrong Symbol")
             return
-        l = 3 if symbol in EXT_DCE_ALL else 4
+        l = 3 if symbol in EXT_CZCE_ALL else 4
         sql = ''' select '''+EXT_In_Header+''' from '''+exchmarkt+'''
         where '''+EXT_In_Date+''' >= '''+startdate+''' and '''+EXT_In_Date+''' <= '''+enddate+" and regexp_like("+EXT_In_Asset+", '"+'^'+symbol+str('[0-9]{')+str(l)+"}')"+'''
         order by trade_dt'''
@@ -102,10 +104,6 @@ class HisDayData:
         ###先转换合约名称(只需要数字部分),将只有三位数字的合约名称前添加数字1
         dcode = pd.Series([re.findall(r"\d*",dom_code[EXT_Out_Asset][i])[2] for i in range(len(dom_code[EXT_Out_Asset]))])
         scode = pd.Series([re.findall(r"\d*",sub_code[EXT_Out_Asset][i])[2] for i in range(len(sub_code[EXT_Out_Asset]))])
-        dlen = pd.Series([len(dcode[i]) for i in range(len(dcode))])
-        slen = pd.Series([len(scode[i]) for i in range(len(scode))])
-        dcode.ix[dlen == 3] = '1'+dcode.ix[dlen == 3]
-        scode.ix[dlen == 3] = '1'+scode.ix[slen == 3]
         ###找到dcode等于合约月份的位置（这里比较年份数+月份数），且第一个合约不切换
         dom_check3 = (dcode == dom_code[EXT_Out_Date].str[2:6])
         dom_check3[0] = False
