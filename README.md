@@ -1,5 +1,4 @@
-# Project1
 
-getdata.py --原始版
+合约代码表
+https://wenku.baidu.com/view/da6423992e3f5727a4e96222.html
 
-getdata2.py --面向对象版
