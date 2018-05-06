@@ -23,16 +23,48 @@ class HisDayData:
         for excode,symbol in AssetList.items():
             for i in range(len(symbol)):
                 print(symbol[i])
-                AssetData[symbol[i]] = self.getQuoteWind(excode,symbol[i],startdate,enddate)
-                if AssetData[symbol[i]] is None:
-                    continue
+                if hdf.dataInfo(EXT_Path,excode,symbol[i],startdate,enddate):
+                    #不可以直接取本地数据
+                    AssetData[symbol[i]] = self.getQuoteWind(excode,symbol[i],startdate,enddate)
+                    if AssetData[symbol[i]] is None:
+                        continue
+                    else:
+                        DomCode[symbol[i]],SubCode[symbol[i]] = self.getStitchRule(excode,symbol[i],startdate,enddate,AssetData[symbol[i]])
+                    if is_save == True:
+                        if is_Stitch == True:
+                            hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,DomCode[symbol[i]],EXT_Period_1,EXT_PERIOD,EXT_STITCH,EXT_Series_0)
+                            hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,SubCode[symbol[i]],EXT_Period_1,EXT_PERIOD,EXT_STITCH,EXT_Series_1)
+                            #hdf = HdfUtility()移到上面
+                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,DomCode[symbol[i]],EXT_Series_0,EXT_RULE,EXT_STITCH)
+                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,SubCode[symbol[i]],EXT_Series_1,EXT_RULE,EXT_STITCH)
+                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Period_1,EXT_PERIOD,EXT_RAWDATA)
                 else:
-                    DomCode[symbol[i]],SubCode[symbol[i]] = self.getStitchRule(excode,symbol[i],startdate,enddate,AssetData[symbol[i]])
-                if is_save == True:
-                    hdf = HdfUtility()
-                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,DomCode[symbol[i]],EXT_Series_0)
-                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,SubCode[symbol[i]],EXT_Series_1)
-                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Period_1)
+                    #可以直接取本地数据
+                    AssetData[symbol[i]] = hdf.hdfRead(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Period_1,EXT_PERIOD,EXT_RAWDATA)
+                    DomCode[symbol[i]] = hdf.hdfRead(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Series_0,EXT_RULE,EXT_STITCH)
+                    SubCode[symbol[i]] = hdf.hdfRead(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Series_1,EXT_RULE,EXT_STITCH)
+                    if (hdf.hdfRead(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Period_1,EXT_PERIOD,EXT_STITCH,EXT_Series_0)) == False:
+                        #如果为空值
+                        DomCombi[symbol[i]] = DomCode[symbol[i]].(AssetData[symbol[i]],on=[EXT_Out_Date,EXT_Out_Asset],how='left')
+                        SubCombi[symbol[i]] = SubCode[symbol[i]].(AssetData[symbol[i]],on=[EXT_Out_Date,EXT_Out_Asset],how='left')
+                    else:
+                        DomCombi[symbol[i]] = hdf.hdfRead(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Period_1,EXT_PERIOD,EXT_STITCH,EXT_Series_0)
+                        SubCombi[symbol[i]] = hdf.hdfRead(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Period_1,EXT_PERIOD,EXT_STITCH,EXT_Series_1)
+                ############################################################
+                #############################################################
+# =============================================================================
+#                 #以下除return可以不要，已经挪至上方
+#                 AssetData[symbol[i]] = self.getQuoteWind(excode,symbol[i],startdate,enddate)
+#                 if AssetData[symbol[i]] is None:
+#                     continue
+#                 else:
+#                     DomCode[symbol[i]],SubCode[symbol[i]] = self.getStitchRule(excode,symbol[i],startdate,enddate,AssetData[symbol[i]])
+#                 if is_save == True:
+#                     #hdf = HdfUtility()移到上面
+#                     hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,DomCode[symbol[i]],EXT_Series_0)
+#                     hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,SubCode[symbol[i]],EXT_Series_1)
+#                     hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Period_1)
+# =============================================================================
         return AssetData,DomCode,SubCode
 
 
