@@ -101,6 +101,8 @@ EXT_Out_Delistdate = 'Delistdate'
 EXT_Series_0 = '00'
 EXT_Series_1 = '01'
 EXT_Period_1 = '1d'
+################################3
+#以下新增
 ##Saving Structure: datatype
 EXT_RAWDATA = 'RawData'
 EXT_STITCH = 'Stitch'
