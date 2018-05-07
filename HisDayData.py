@@ -21,26 +21,25 @@ class HisDayData:
         for excode,symbol in asset_list.items():
             for i in range(len(symbol)):
                 print(symbol[i])
-                if hdf.dataInfo(EXT_Path,excode,symbol[i],'raw',startdate,enddate) &...
-                    hdf.dataInfo(EXT_Path,excode,symbol[i],'rule',startdate,enddate):
+                if hdf.dataInfo(EXT_Path,excode,symbol[i],'raw',startdate,enddate) & hdf.dataInfo(EXT_Path,excode,symbol[i],'rule',startdate,enddate):
                     dom_data,sub_data = self.getStitchData(excode,symbol[i],startdate,enddate)
                     if is_save_stitch == True:
-                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,dom_data,EXT_Period_1,EXT_PERIOD,EXT_STITCH,EXT_Series_0)
-                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,sub_data,EXT_Period_1,EXT_PERIOD,EXT_STITCH,EXT_Series_1)
+                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,dom_data,EXT_Period_1,EXT_Period,EXT_Stitch,EXT_Series_0)
+                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,sub_data,EXT_Period_1,EXT_Period,EXT_Stitch,EXT_Series_1)
                 else:
                     raw_data = self.getQuoteWind(excode,symbol[i],startdate,enddate)
                     if raw_data is None:
                         continue
                     else:
-                        dom_rule,sub_rule = self.getStitchRule(EXT_Datatype_Stitch,excode,symbol[i],startdate,enddate,raw_data)
-                        dom_data,sub_data = self.getStitchData(EXT_Datatype_Stitch,excode,symbol[i],startdate,enddate,raw_data,dom_rule,sub_rule)
-                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,dom_rule,EXT_Series_0,EXT_RULE,EXT_STITCH)
-                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,sub_rule,EXT_Series_1,EXT_RULE,EXT_STITCH)
+                        dom_rule,sub_rule = self.getStitchRule(EXT_Stitch,excode,symbol[i],startdate,enddate,raw_data)
+                        dom_data,sub_data = self.getStitchData(EXT_Stitch,excode,symbol[i],startdate,enddate,raw_data,dom_rule,sub_rule)
+                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,dom_rule,EXT_Series_0,EXT_Rule,EXT_Stitch)
+                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,sub_rule,EXT_Series_1,EXT_Rule,EXT_Stitch)
                     if is_save_raw == True:
-                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,rawdata,EXT_Period_1,EXT_PERIOD,EXT_RAWDATA)
+                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,raw_data,EXT_Period_1,EXT_Period,EXT_Rawdata)
                     if is_save_stitch == True:
-                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,dom_data,EXT_Period_1,EXT_PERIOD,EXT_STITCH,EXT_Series_0)
-                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,sub_data,EXT_Period_1,EXT_PERIOD,EXT_STITCH,EXT_Series_1)
+                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,dom_data,EXT_Period_1,EXT_Period,EXT_Stitch,EXT_Series_0)
+                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,sub_data,EXT_Period_1,EXT_Period,EXT_Stitch,EXT_Series_1)
 
     def getQuoteWind(self,excode,symbol,startdate,enddate):
         if symbol in EXT_CFE_STOCK:
@@ -206,4 +205,4 @@ class HisDayData:
 
 if __name__  ==  '__main__':
     a = HisDayData()
-    a.getData('20170101','20171231',True)
+    a.getData('20130101','20171231',True,True)

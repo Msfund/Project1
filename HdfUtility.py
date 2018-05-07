@@ -24,7 +24,7 @@ class HdfUtility:
     def dataInfo(self,path,excode,symbol,kind,startdate,enddate):
         # 本地有数据返回True
         # kind = 'raw' or 'rule'
-        f = h5py.File(path,'r')
+        f = h5py.File(path,'a')
         if kind == 'raw':
             try:
                 key = EXT_Rawdata+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+EXT_Period_1
@@ -83,7 +83,7 @@ class HdfUtility:
     # datatype为 'RawData' 'Stitch' 'Indicator'
     # kind和datatype默认为空值时
     # kind2为Stitch-Period-1d-00备用参数
-    def hdfWrite(self,path,excode,symbol,startdate,enddate,indata,kind,loca,datatype,kind2 = None)::
+    def hdfWrite(self,path,excode,symbol,startdate,enddate,indata,kind,loca,datatype,kind2 = None):
         store = HDFStore(path,mode='a')
         ###########################################
         #以下是新增部分
@@ -95,7 +95,7 @@ class HdfUtility:
         try:
             #尝试是否存在该地址
             store[key]
-        except KeyError:
+        except:
             #不存在，则创建新的地址
             store[key] = indata
             store.close()
