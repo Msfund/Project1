@@ -4,7 +4,7 @@ EXT_Wind_Password = 'fe'
 EXT_Wind_Link = '192.168.100.22:1521/winddb'
 EXT_Path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
 ##Saving Structure: datatype
-EXT_Rawdata = 'RawData'
+EXT_Rawdata = 'Rawdata'
 EXT_Stitch = 'Stitch'
 EXT_Indicator = 'Indicator'
 ##Saving location:loca
