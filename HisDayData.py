@@ -11,22 +11,36 @@ class HisDayData:
         db = cx_Oracle.connect(EXT_Wind_User,EXT_Wind_Password,EXT_Wind_Link)
         self.cursor = db.cursor()
 
-    def getData(self,startdate,enddate,is_save_stitch=False):
+    def getData(self,startdate,enddate,is_save_raw=False,is_save_stitch=False):
         asset_list = {}
         asset_list[EXT_EXCHANGE_CFE] = EXT_CFE_ALL
         asset_list[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
         asset_list[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
         # asset_list[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
+        hdf = HdfUtility()
         for excode,symbol in asset_list.items():
             for i in range(len(symbol)):
                 print(symbol[i])
-                raw_data = self.getQuoteWind(excode,symbol[i],startdate,enddate)
-                if raw_data is None:
-                    continue
+                if hdf.dataInfo(EXT_Path,excode,symbol[i],'raw',startdate,enddate) &...
+                    hdf.dataInfo(EXT_Path,excode,symbol[i],'rule',startdate,enddate):
+                    dom_data,sub_data = self.getStitchData(excode,symbol[i],startdate,enddate)
+                    if is_save_stitch == True:
+                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,dom_data,EXT_Period_1,EXT_PERIOD,EXT_STITCH,EXT_Series_0)
+                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,sub_data,EXT_Period_1,EXT_PERIOD,EXT_STITCH,EXT_Series_1)
                 else:
-                    dom_rule,sub_rule = self.getStitchRule(EXT_Datatype_Stitch,excode,symbol[i],startdate,enddate,raw_data)
-                    dom_data,sub_data = self.getStitchData(EXT_Datatype_Stitch,excode,symbol[i],startdate,enddate,raw_data,dom_rule,sub_rule,is_save_stitch)
-        return raw_data,dom_rule,sub_rule
+                    raw_data = self.getQuoteWind(excode,symbol[i],startdate,enddate)
+                    if raw_data is None:
+                        continue
+                    else:
+                        dom_rule,sub_rule = self.getStitchRule(EXT_Datatype_Stitch,excode,symbol[i],startdate,enddate,raw_data)
+                        dom_data,sub_data = self.getStitchData(EXT_Datatype_Stitch,excode,symbol[i],startdate,enddate,raw_data,dom_rule,sub_rule)
+                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,dom_rule,EXT_Series_0,EXT_RULE,EXT_STITCH)
+                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,sub_rule,EXT_Series_1,EXT_RULE,EXT_STITCH)
+                    if is_save_raw == True:
+                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,rawdata,EXT_Period_1,EXT_PERIOD,EXT_RAWDATA)
+                    if is_save_stitch == True:
+                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,dom_data,EXT_Period_1,EXT_PERIOD,EXT_STITCH,EXT_Series_0)
+                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,sub_data,EXT_Period_1,EXT_PERIOD,EXT_STITCH,EXT_Series_1)
 
     def getQuoteWind(self,excode,symbol,startdate,enddate):
         if symbol in EXT_CFE_STOCK:
@@ -157,10 +171,7 @@ class HisDayData:
         #获取调整因子的数据
         dom_rule = self.getAdjFactor(raw_data,dom_rule)
         sub_rule = self.getAdjFactor(raw_data,sub_rule)
-        #写入hdf
-        hdf = HdfUtility()
-        hdf.hdfWrite(EXT_Path,EXT_Datatype_Stitch,excode,symbol,startdate,enddate,dom_rule,EXT_Series_0)
-        hdf.hdfWrite(EXT_Path,EXT_Datatype_Stitch,excode,symbol,startdate,enddate,sub_rule,EXT_Series_1)
+
         return dom_rule,sub_rule
 
     def getAdjFactor(self,raw_data,code):
@@ -186,15 +197,11 @@ class HisDayData:
         code = code.fillna(value = 1) # 第一个调整因子为1
         return code
 
-    def getStitchData(self,datatype,excode,symbol,startdate,enddate,raw_data,dom_rule,sub_rule,is_save_stitch=False):
+    def getStitchData(self,datatype,excode,symbol,startdate,enddate,raw_data,dom_rule,sub_rule):
         dom_data = dom_rule.merge(raw_data,on=[EXT_Out_Date,EXT_Out_Asset],how='left')
         sub_data = sub_rule.merge(raw_data,on=[EXT_Out_Date,EXT_Out_Asset],how='left')
         dom_data.sort_values(by=[EXT_Out_Date,EXT_Out_Asset],inplace=True)
         sub_data.sort_values(by=[EXT_Out_Date,EXT_Out_Asset],inplace=True)
-        if is_save_stitch == True:
-            hdf = HdfUtility()
-            hdf.hdfWrite(EXT_Path,EXT_Datatype_Stitch,excode,symbol,startdate,enddate,dom_data,EXT_Series_0)
-            hdf.hdfWrite(EXT_Path,EXT_Datatype_Stitch,excode,symbol,startdate,enddate,sub_data,EXT_Series_1)
         return dom_data, sub_data
 
 if __name__  ==  '__main__':
