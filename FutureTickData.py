@@ -53,7 +53,7 @@ class HisFutureTick(object):
         hdf = HdfUtility()
         #un pack the packed data file one by one
         for f in f_packed:
-            # self.unpack(filename=f, path_temp=path_temp)
+            self.unpack(filename=f, path_temp=path_temp)
         #   get the tick data file
             files_tick = self.listFiles(path =path_temp_full, patter_ex=file_unpacked_ex)
             file_SN_df = self.getSeriesNum(tickfiles=files_tick)
@@ -160,6 +160,7 @@ class HisFutureTick(object):
     def getResampleBar(self, bardata1m, freq='5T'):
         '''1min bar to 'freq' bar'''
         bar_data = bardata1m.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule)
+        bar_data = bardata1m.resample(rule=freq).agg(EXT_Bar_Rule)
         bar_data_fmt = bar_data.dropna(axis=0, how='all')
         return bar_data_fmt
 
