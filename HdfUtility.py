@@ -90,11 +90,7 @@ class HdfUtility:
             key = kind1+'/'+excode+'/'+symbol+'/'+kind3
         if kind1 == EXT_Stitch:
             key=kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
-        # adddata = self.hdfCheck(path,excode,symbol,indata,kind1,kind2,kind3)
+        store[key]
+        adddata = indata
         store.append(key,indata)
         store.close()
-'''
-    def hdfCheck(self,path,excode,symbol,indata,kind1,kind2,kind3):
-
-        return adddata
-'''
