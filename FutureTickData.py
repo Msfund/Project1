@@ -58,8 +58,7 @@ class HisFutureTick(object):
             file_SN_df = self.getSeriesNum(tickfiles=files_tick)
         #   get the bar data and save it in the path_output_bar, file name is as TickerSim_freq.csv
             for idx, row in file_SN_df.iterrows():
-                filename_csv = row[EXT_Info_TickerSim]
-                ### symbol = row[EXT_Info_TickerSim]
+                symbol = row[EXT_Info_TickerSim]
                 #1 min bar
                 bar1m = self.tick2Bar1m(filename_tick = row[EXT_Info_File], tradetime=['AM', 'PM'])
                 bar1m.insert(0,EXT_Out_Asset,bar1m.Ticker+'.'+self.exchange)

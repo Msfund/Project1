@@ -5,13 +5,53 @@ import re
 from HdfUtility import *
 from rawUlt import *
 
+'''
+Step1:写入Rawdata
+    低频数据 getQuoteWind() 高频数据 HisFutureTick()
+Step2:读低频Rawdata，计算StitchRule，写入Rule
+
+Step3:读各频率Rawdata，读Rule，Stitch，写入各个Period
+
+Step4:读StitchData
+'''
 class HisDayData:
 
     def __init__(self):
         db = cx_Oracle.connect(EXT_Wind_User,EXT_Wind_Password,EXT_Wind_Link)
         self.cursor = db.cursor()
 
-    def getData(self,startdate,enddate,is_save_raw=False,is_save_stitch=False):
+def getData(self,startdate,enddate,is_save_raw=False,is_save_stitch=False):
+        AssetList = {}
+        AssetList[EXT_EXCHANGE_CFE] = EXT_CFE_ALL
+        AssetList[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
+        AssetList[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
+        #AssetList[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
+        AssetData = {}
+        DomCode = {}
+        SubCode = {}
+        for excode,symbol in AssetList.items():
+            for i in range(len(symbol)):
+                print(symbol[i])
+                if hdf.dataInfo(EXT_Path,excode,symbol[i],'raw',startdate,enddate):
+                    #可以直接取本地RawData数据
+                    AssetData[symbol[i]] = hdf.hdfRead(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Period_1,EXT_Period,EXT_RawData)
+                else:
+                    #不可以直接取本地RawData数据
+                    AssetData[symbol[i]] = self.getQuoteWind(excode,symbol[i],startdate,enddate)
+                AssetData[symbol[i]] = AssetData[symbol[i]].sort_values(by = [EXT_Out_Date,EXT_Out_Asset])
+                if hdf.dataInfo(EXT_Path,excode,symbol[i],'rule',startdate,enddate):
+                    #可以直接取本地Rule数据
+                    DomCode[symbol[i]] = hdf.hdfRead(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Series_0,EXT_Rule,EXT_Stitch)
+                    SubCode[symbol[i]] = hdf.hdfRead(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Series_1,EXT_Rule,EXT_Stitch)
+                else:
+                    #不可以直接取本地rule数据
+                    DomCode[symbol[i]],SubCode[symbol[i]] = self.getStitchRule(excode,symbol[i],startdate,enddate,AssetData[symbol[i]])
+                if is_save_raw == True:
+                    if is_save_stitch == True:
+                        DomCombi,SubCombi = self.getStitchData(excode,symbol[i],startdate,enddate,AssetData[symbol[i]],DomCode[symbol[i]],SubCode[symbol[i]])
+                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,DomCombi,EXT_Period_1,EXT_Period,EXT_Stitch,EXT_Series_0)
+
+    def getData(self,startdate=EXT_Start,enddate=EXT_End,is_save_raw=True,is_save_stitch=True):
         asset_list = {}
         asset_list[EXT_EXCHANGE_CFE] = EXT_CFE_ALL
         asset_list[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
@@ -21,6 +61,15 @@ class HisDayData:
         for excode,symbol in asset_list.items():
             for i in range(len(symbol)):
                 print(symbol[i])
+                '''
+                Step1:写入Rawdata
+                    低频数据 getQuoteWind() 高频数据 HisFutureTick()
+                Step2:读低频Rawdata，计算StitchRule，写入Rule
+
+                Step3:读各频率Rawdata，读Rule，Stitch，写入各个Period
+
+                Step4:读StitchData
+                '''
                 if hdf.dataInfo(EXT_Path,excode,symbol[i],'raw',startdate,enddate) & hdf.dataInfo(EXT_Path,excode,symbol[i],'rule',startdate,enddate):
                     dom_data,sub_data = self.getStitchData(excode,symbol[i],startdate,enddate)
                     if is_save_stitch == True:
