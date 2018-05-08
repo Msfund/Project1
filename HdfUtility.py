@@ -31,35 +31,6 @@ HDF
 
 '''
 class HdfUtility:
-    def dataInfo(self,path,excode,symbol,kind,startdate,enddate):
-        # 本地有数据返回True
-        # kind = 'raw' or 'rule'
-        f = h5py.File(path,'a')
-        if kind == 'raw':
-            try:
-                key = EXT_Rawdata+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+EXT_Period_1d
-                from_date = f[key].attrs['From_date']
-                to_date = f[key].attrs['To_date']
-                if from_date< pd.to_datetime(startdate) and pd.to_datetime(enddate)<to_date:
-                    return True
-                else:
-                    return False
-            except:
-                return False
-        elif kind == 'rule':
-            try:
-                key = EXT_Stitch+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+EXT_Series_00
-                from_date = f[key].attrs['From_date']
-                to_date = f[key].attrs['To_date']
-                if from_date< pd.to_datetime(startdate) and pd.to_datetime(enddate)<to_date:
-                    return True
-                else:
-                    return False
-            except:
-                return False
-        else:
-            print("Wrong kind")
-        f.close()
 
     def hdfRead(self,path,excode,symbol,kind1,kind2,kind3,startdate=EXT_Start,enddate=EXT_End):
         # kind1为 'Rawdata',Stitch','Indicator'
@@ -90,7 +61,6 @@ class HdfUtility:
             key = kind1+'/'+excode+'/'+symbol+'/'+kind3
         if kind1 == EXT_Stitch:
             key=kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
-        store[key]
-        adddata = indata
+        adddata = indata[~indata.index.isin(store[key].index)]
         store.append(key,indata)
         store.close()
