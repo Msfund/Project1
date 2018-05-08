@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import re
 from HdfUtility import *
-from rawUlt import *
+from dataUlt import *
 
 '''
 Step1:写入Rawdata
@@ -20,77 +20,30 @@ class HisDayData:
         db = cx_Oracle.connect(EXT_Wind_User,EXT_Wind_Password,EXT_Wind_Link)
         self.cursor = db.cursor()
 
-def getData(self,startdate,enddate,is_save_raw=False,is_save_stitch=False):
-        AssetList = {}
-        AssetList[EXT_EXCHANGE_CFE] = EXT_CFE_ALL
-        AssetList[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
-        AssetList[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
-        #AssetList[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
-        AssetData = {}
-        DomCode = {}
-        SubCode = {}
-        for excode,symbol in AssetList.items():
-            for i in range(len(symbol)):
-                print(symbol[i])
-                if hdf.dataInfo(EXT_Path,excode,symbol[i],'raw',startdate,enddate):
-                    #可以直接取本地RawData数据
-                    AssetData[symbol[i]] = hdf.hdfRead(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Period_1,EXT_Period,EXT_RawData)
-                else:
-                    #不可以直接取本地RawData数据
-                    AssetData[symbol[i]] = self.getQuoteWind(excode,symbol[i],startdate,enddate)
-                AssetData[symbol[i]] = AssetData[symbol[i]].sort_values(by = [EXT_Out_Date,EXT_Out_Asset])
-                if hdf.dataInfo(EXT_Path,excode,symbol[i],'rule',startdate,enddate):
-                    #可以直接取本地Rule数据
-                    DomCode[symbol[i]] = hdf.hdfRead(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Series_0,EXT_Rule,EXT_Stitch)
-                    SubCode[symbol[i]] = hdf.hdfRead(EXT_Path,excode,symbol[i],startdate,enddate,AssetData[symbol[i]],EXT_Series_1,EXT_Rule,EXT_Stitch)
-                else:
-                    #不可以直接取本地rule数据
-                    DomCode[symbol[i]],SubCode[symbol[i]] = self.getStitchRule(excode,symbol[i],startdate,enddate,AssetData[symbol[i]])
-                if is_save_raw == True:
-                    if is_save_stitch == True:
-                        DomCombi,SubCombi = self.getStitchData(excode,symbol[i],startdate,enddate,AssetData[symbol[i]],DomCode[symbol[i]],SubCode[symbol[i]])
-                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,DomCombi,EXT_Period_1,EXT_Period,EXT_Stitch,EXT_Series_0)
-
-    def getData(self,startdate=EXT_Start,enddate=EXT_End,is_save_raw=True,is_save_stitch=True):
+    def getData(self,is_save_stitch=True):
         asset_list = {}
         asset_list[EXT_EXCHANGE_CFE] = EXT_CFE_ALL
-        asset_list[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
-        asset_list[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
+        # asset_list[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
+        # asset_list[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
         # asset_list[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
         hdf = HdfUtility()
         for excode,symbol in asset_list.items():
             for i in range(len(symbol)):
                 print(symbol[i])
-                '''
-                Step1:写入Rawdata
-                    低频数据 getQuoteWind() 高频数据 HisFutureTick()
-                Step2:读低频Rawdata，计算StitchRule，写入Rule
-
-                Step3:读各频率Rawdata，读Rule，Stitch，写入各个Period
-
-                Step4:读StitchData
-                '''
-                if hdf.dataInfo(EXT_Path,excode,symbol[i],'raw',startdate,enddate) & hdf.dataInfo(EXT_Path,excode,symbol[i],'rule',startdate,enddate):
-                    dom_data,sub_data = self.getStitchData(excode,symbol[i],startdate,enddate)
-                    if is_save_stitch == True:
-                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,dom_data,EXT_Period_1,EXT_Period,EXT_Stitch,EXT_Series_0)
-                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,sub_data,EXT_Period_1,EXT_Period,EXT_Stitch,EXT_Series_1)
+                raw_data = self.getQuoteWind(excode,symbol[i])
+                hdf.hdfWrite(EXT_Path,excode,symbol[i],raw_data,EXT_Rawdata,None,EXT_Period_1d)
+                if raw_data is None:
+                    continue
                 else:
-                    raw_data = self.getQuoteWind(excode,symbol[i],startdate,enddate)
-                    if raw_data is None:
-                        continue
-                    else:
-                        dom_rule,sub_rule = self.getStitchRule(excode,symbol[i],startdate,enddate,raw_data)
-                        dom_data,sub_data = self.getStitchData(excode,symbol[i],startdate,enddate,raw_data,dom_rule,sub_rule)
-                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,dom_rule,EXT_Series_0,EXT_Rule,EXT_Stitch)
-                    hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,sub_rule,EXT_Series_1,EXT_Rule,EXT_Stitch)
-                    if is_save_raw == True:
-                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,raw_data,EXT_Period_1,EXT_Period,EXT_Rawdata)
+                    dom_rule,sub_rule = self.getStitchRule(excode,symbol[i],raw_data)
+                    hdf.hdfWrite(EXT_Path,excode,symbol[i],dom_rule,EXT_Stitch,EXT_Series_00,None)
+                    hdf.hdfWrite(EXT_Path,excode,symbol[i],sub_rule,EXT_Stitch,EXT_Series_01,None)
+                    dom_data,sub_data = self.getStitchData(excode,symbol[i],raw_data,dom_rule,sub_rule)
                     if is_save_stitch == True:
-                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,dom_data,EXT_Period_1,EXT_Period,EXT_Stitch,EXT_Series_0)
-                        hdf.hdfWrite(EXT_Path,excode,symbol[i],startdate,enddate,sub_data,EXT_Period_1,EXT_Period,EXT_Stitch,EXT_Series_1)
+                        hdf.hdfWrite(EXT_Path,excode,symbol[i],dom_data,EXT_Stitch,EXT_Series_00,EXT_Period_1d)
+                        hdf.hdfWrite(EXT_Path,excode,symbol[i],sub_data,EXT_Stitch,EXT_Series_01,EXT_Period_1d)
 
-    def getQuoteWind(self,excode,symbol,startdate,enddate):
+    def getQuoteWind(self,excode,symbol,startdate=EXT_Start,enddate=EXT_End):
         if symbol in EXT_CFE_STOCK:
             exchmarkt = EXT_CFE_STOCK_FILE
         elif symbol in EXT_CFE_BOND:
@@ -145,8 +98,7 @@ def getData(self,startdate,enddate,is_save_raw=False,is_save_stitch=False):
         delistdate[EXT_Out_Delistdate] = pd.to_datetime(delistdate[EXT_Out_Delistdate])
         return delistdate
 
-
-    def getStitchRule(self,excode,symbol,startdate,enddate,raw_data):
+    def getStitchRule(self,excode,symbol,raw_data,startdate=EXT_Start,enddate=EXT_End):
         trade_sort = raw_data.sort_values(by = [EXT_Out_Date,EXT_Out_OpenInterest], ascending = [1,0])
         delistdate = self.futureDelistdate(symbol,startdate)
         delistdate.columns = EXT_Out_Header2.split(',')
@@ -238,9 +190,7 @@ def getData(self,startdate,enddate,is_save_raw=False,is_save_stitch=False):
         # 获取调整因子的数据
         dom_code = self.getAdjFactor(raw_data,dom_code)
         sub_code = self.getAdjFactor(raw_data,sub_code)
-
         return dom_code,sub_code
-
 
     def getAdjFactor(self,raw_data,code):
         # 找到切换点 lead lag
@@ -266,7 +216,7 @@ def getData(self,startdate,enddate,is_save_raw=False,is_save_stitch=False):
         return code
 
 
-    def getStitchData(self,excode,symbol,startdate,enddate,raw_data,dom_rule,sub_rule):
+    def getStitchData(self,excode,symbol,raw_data,dom_rule,sub_rule,startdate=EXT_Start,enddate=EXT_End):
         dom_data = dom_rule.merge(raw_data,on=[EXT_Out_Date,EXT_Out_Asset],how='left')
         sub_data = sub_rule.merge(raw_data,on=[EXT_Out_Date,EXT_Out_Asset],how='left')
         dom_data.sort_values(by=[EXT_Out_Date,EXT_Out_Asset],inplace=True)
@@ -275,4 +225,4 @@ def getData(self,startdate,enddate,is_save_raw=False,is_save_stitch=False):
 
 if __name__  ==  '__main__':
     a = HisDayData()
-    a.getData('20130101','20171231',True,True)
+    a.getData()

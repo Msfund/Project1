@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from pandas.io.pytables import HDFStore
 import re
-from rawUlt import *
+from dataUlt import *
 import h5py
 pd.set_option('io.hdf.default_format','table')
 '''
@@ -73,7 +73,7 @@ class HdfUtility:
             key = kind1+'/'+excode+'/'+symbol+'/'+kind3
             data = store[key].ix[((store[key][EXT_Out_Date]>=pd.to_datetime(startdate))&(store[key][EXT_Out_Date]<=pd.to_datetime(enddate))),:]
         if kind1 == EXT_Stitch:
-            key=kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3=None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
+            key = kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
             data = store[key].ix[((store[key][EXT_Out_Date]>=pd.to_datetime(startdate))&(store[key][EXT_Out_Date]<=pd.to_datetime(enddate))),:]
         store.close()
         return data
@@ -89,11 +89,12 @@ class HdfUtility:
         if kind1 == EXT_Rawdata:
             key = kind1+'/'+excode+'/'+symbol+'/'+kind3
         if kind1 == EXT_Stitch:
-            key=kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3=None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
-        adddata = self.hdfCheck(path,excode,symbol,indata,kind1,kind2,kind3)
-        store.append(key,adddata)
+            key=kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
+        # adddata = self.hdfCheck(path,excode,symbol,indata,kind1,kind2,kind3)
+        store.append(key,indata)
         store.close()
-
+'''
     def hdfCheck(self,path,excode,symbol,indata,kind1,kind2,kind3):
 
         return adddata
+'''
