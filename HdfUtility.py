@@ -7,6 +7,14 @@ import h5py
 pd.set_option('io.hdf.default_format','table')
 '''
 HDF
+    /Rawdata
+        /CFE
+            /IC
+                /1m
+                /5m
+                /30m
+                /1h
+                /1d
     /Stitch
         /CFE
             /IF
@@ -19,6 +27,8 @@ HDF
                   /15m
                   /60m
                   /1d
+    /Indicator
+
 '''
 class HdfUtility:
     def dataInfo(self,path,excode,symbol,kind,startdate,enddate):
