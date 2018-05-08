@@ -25,7 +25,7 @@ from pyunpack import Archive
 from vnpy.trader.language.english.constant import *
 
 from dataUlt import *
-from rawUlt import *
+from HdfUtility import *
 
 
 
@@ -50,6 +50,7 @@ class HisFutureTick(object):
         f_packed = self.listFiles(path =path_packedtick, patter_ex=file_packedtick_ex)
 
         filecsv_mod_dict = dict()
+        hdf = HdfUtility()
         #un pack the packed data file one by one
         for f in f_packed:
             self.unpack(filename=f, path_temp=path_temp)
@@ -63,13 +64,11 @@ class HisFutureTick(object):
                 bar1m = self.tick2Bar1m(filename_tick = row[EXT_Info_File], tradetime=['AM', 'PM'])
                 bar1m.insert(0,EXT_Out_Asset,bar1m.Ticker+'.'+self.exchange)
                 bar1m.drop('Ticker',axis=1,inplace=True)
-                startdate = bar1m.index[0]
-                enddate = bar1m.index[-1]
-                hdf.hdfwrite(self.bar_path,self.exchange,symbol,bar1m,EXT_RawData,None,EXT_Period_1m)
+                hdf.hdfWrite(self.bar_path,self.exchange,symbol,bar1m.set_index([EXT_Out_Date,EXT_Out_Asset]),EXT_Rawdata,None,EXT_Period_1m)
                 #other freq bars
                 for fr in freq:
                     bars_fr = self.getResampleBar(bardata1m=bar1m, freq=fr)
-                    hdf.hdfwrite(self.bar_path,self.exchange,symbol,bars_fr,EXT_RawData,None,EXT_Freq_Period[fr])
+                    hdf.hdfWrite(self.bar_path,self.exchange,symbol,bars_fr.set_index([EXT_Out_Date,EXT_Out_Asset]),EXT_Rawdata,None,EXT_Freq_Period[fr])
 
         self.rmdir(path=path_temp)
         elapsed = timeit.default_timer() - start_time

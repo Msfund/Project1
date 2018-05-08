@@ -61,6 +61,13 @@ class HdfUtility:
             key = kind1+'/'+excode+'/'+symbol+'/'+kind3
         if kind1 == EXT_Stitch:
             key=kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
-        adddata = indata[~indata.index.isin(store[key].index)]
-        store.append(key,indata)
+        try:
+            store[key]
+        except KeyError:
+            store[key] = indata
+        else:
+            adddata = indata[~indata.index.isin(store[key].index)]
+            if kind2 in [EXT_Series_0,EXT_Series_1]:
+                adddata[EXT_Out_AdjFactor] = adddata[EXT_Out_AdjFactor]*store[key][EXT_Out_AdjFactor].iloc[-1]/adddata[EXT_Out_AdjFactor].iloc[0]
+            store.append(key,adddata)
         store.close()
