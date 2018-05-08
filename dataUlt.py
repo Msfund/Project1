@@ -192,3 +192,4 @@ EXT_Series_dict = {1:EXT_Series_1, 2:EXT_Series_2, 3:EXT_Series_3, 4:EXT_Series_
                    9:EXT_Series_9, 10:EXT_Series_10, 11:EXT_Series_11, 12:EXT_Series_12}
 
 EXT_FILE_CSV = '.csv'
+EXT_Freq_Period = {'5T':'5m','15T':'15m','30T':'30m','H':'60m', 'D':'1d'}
