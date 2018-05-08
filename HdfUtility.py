@@ -61,47 +61,33 @@ class HdfUtility:
             print("Wrong kind")
         f.close()
 
-    # 读
-    # kind1为 '00'、'01'、'1d'
-    # 当kind1 为 '1d' '1m' 即在Stitch-Period下面，kind2为00 或 01
-    # datatype为 'RawData' 'Stitch' 'Indicator'
-    # loca为'Rule' 'Period'
-    def hdfRead(self,path,excode,symbol,startdate,enddate,kind1,loca,datatype,kind2 = None):
+
+
+    def hdfRead(self,path,excode,symbol,startdate,enddate,kind1,kind2,kind3):
+        # kind1为 'Rawdata'、'Stitch'、'Indicator'
+        # kind2为 '00' '01'
+        # kind3为 '1d' '60m' '30m' '15m' '5m' '1m'
         store = HDFStore(path,mode = 'r')
-        if kind2 == None:
-            #例如Stitch-Rule-00或者RawData-Period-1d执行下面语句
-            key = datatype+'/'+excode+'/'+symbol+'/'+loca+'/'+kind1
+        if kind1 == EXT_Rawdata:
+            key = kind1+'/'+excode+'/'+symbol+'/'+kind3
             data = store[key].ix[((store[key][EXT_Out_Date]>=pd.to_datetime(startdate))&(store[key][EXT_Out_Date]<=pd.to_datetime(enddate))),:]
-        else:
-            #例如Stitch-Period-1d-00执行下面语句
-            try:
-                #尝试是否有缝合后的数据
-                key = datatype+'/'+excode+'/'+symbol+'/'+loca+'/'+kind1+'/'+kind2
-                data = store[key].ix[((store[key][EXT_Out_Date]>=pd.to_datetime(startdate))&(store[key][EXT_Out_Date]<=pd.to_datetime(enddate))),:]
-                if data.shape[0] == 0:
-                    #Stitch--Period-1d-00 or 01可能会出现创建了该地址，但没有任何数据,则data返回False
-                    data = False
-            except:
-                #无该地址，即无缝合数据，返回空值
-                data = False
-        #key = 'Stitch/'+excode+'/'+symbol+'/Rule/'+kind if kind in [EXT_Series_0,EXT_Series_1] else 'Stitch/'+excode+'/'+symbol+'/Period/'+kind
-        #data = store[key].ix[((store[key][EXT_Out_Date]>=pd.to_datetime(startdate))&(store[key][EXT_Out_Date]<=pd.to_datetime(enddate))),:]
+        if kind1 == EXT_Stitch:
+            key=kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3=None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
+            data = store[key].ix[((store[key][EXT_Out_Date]>=pd.to_datetime(startdate))&(store[key][EXT_Out_Date]<=pd.to_datetime(enddate))),:]
+        # if kind1 == EXT_Indicator:
         store.close()
         return data
-    # 写
-    # kind为 '00'、'01'、'1d'
-    # datatype为 'RawData' 'Stitch' 'Indicator'
-    # kind和datatype默认为空值时
-    # kind2为Stitch-Period-1d-00备用参数
-    def hdfWrite(self,path,excode,symbol,startdate,enddate,indata,kind,loca,datatype,kind2 = None):
+
+    def hdfWrite(self,path,excode,symbol,startdate,enddate,indata,kind1,kind2,kind3):
+        # kind1为 'Rawdata'、'Stitch'、'Indicator'
+        # kind2为 '00' '01'
+        # kind3为 '1d' '60m' '30m' '15m' '5m' '1m'
         store = HDFStore(path,mode='a')
-        ###########################################
-        #以下是新增部分
-        if kind2 == None:
-            #例如Stitch-Rule-00执行下面语句
-            key = datatype+'/'+excode+'/'+symbol+'/'+loca+'/'+kind
-        else:
-            key = datatype+'/'+excode+'/'+symbol+'/'+loca+'/'+kind+'/'+kind2
+        if kind1 == EXT_Rawdata:
+            key = kind1+'/'+excode+'/'+symbol+'/'+kind3
+        if kind1 == EXT_Stitch:
+            key=kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3=None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
+        # if kind1 == EXT_Indicator:
         try:
             #尝试是否存在该地址
             store[key]
