@@ -38,7 +38,7 @@ class HisFutureTick(object):
         self.exchange = exchange
 
     def packedTick2Bar(self, path_packedtick='cfx', file_packedtick_ex= ['night','.txt'], file_unpacked_ex = ['Survey.txt'], path_temp='temp',
-                       path_output_bar='bar', freq=['5T','15T','30T','H', 'D']):
+                       path_output_bar='bar', freq=['5T','15T','30T','H']):
         '''packed tick data 2 Bar data'''
         start_time = timeit.default_timer()
         #get full path
@@ -53,7 +53,7 @@ class HisFutureTick(object):
         hdf = HdfUtility()
         #un pack the packed data file one by one
         for f in f_packed:
-            self.unpack(filename=f, path_temp=path_temp)
+            # self.unpack(filename=f, path_temp=path_temp)
         #   get the tick data file
             files_tick = self.listFiles(path =path_temp_full, patter_ex=file_unpacked_ex)
             file_SN_df = self.getSeriesNum(tickfiles=files_tick)
@@ -64,11 +64,14 @@ class HisFutureTick(object):
                 bar1m = self.tick2Bar1m(filename_tick = row[EXT_Info_File], tradetime=['AM', 'PM'])
                 bar1m.insert(0,EXT_Out_Asset,bar1m.Ticker+'.'+self.exchange)
                 bar1m.drop('Ticker',axis=1,inplace=True)
-                hdf.hdfWrite(self.bar_path,self.exchange,symbol,bar1m.set_index([EXT_Out_Date,EXT_Out_Asset]),EXT_Rawdata,None,EXT_Period_1m)
+                bar1m_fm=bar1m.reset_index().set_index([EXT_Bar_DateTime,EXT_Out_Asset])
+                hdf.hdfWrite(self.bar_path,self.exchange,symbol,bar1m_fm,EXT_Rawdata,None,EXT_Period_1m)
                 #other freq bars
                 for fr in freq:
                     bars_fr = self.getResampleBar(bardata1m=bar1m, freq=fr)
-                    hdf.hdfWrite(self.bar_path,self.exchange,symbol,bars_fr.set_index([EXT_Out_Date,EXT_Out_Asset]),EXT_Rawdata,None,EXT_Freq_Period[fr])
+                    bars_fr.insert(0,EXT_Out_Asset,bar1m[EXT_Out_Asset])
+                    bars_fr_fm=bars_fr.reset_index().set_index([EXT_Bar_DateTime,EXT_Out_Asset])
+                    hdf.hdfWrite(self.bar_path,self.exchange,symbol,bars_fr_fm,EXT_Rawdata,None,EXT_Freq_Period[fr])
 
         self.rmdir(path=path_temp)
         elapsed = timeit.default_timer() - start_time
