@@ -161,7 +161,7 @@ class HisFutureTick(object):
         '''1min bar to 'freq' bar'''
         bar_data = bardata1m.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule)
         bar_data = bardata1m.resample(rule=freq).agg(EXT_Bar_Rule)
-        bar_data_fmt = bar_data.dropna(axis=0, how='all')
+        bar_data_fmt = bar_data.dropna(axis=0, how='any')
         return bar_data_fmt
 
     #----------------------------------------------------------------------
