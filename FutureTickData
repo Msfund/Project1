@@ -165,16 +165,19 @@ class HisFutureTick(object):
         time_freqm = self.getTradeTime(dateStr=tradeDate, tradetimeRange = tradetime, freq=freq)
         if freq=='H':
             bar_data = bardata1m.copy()
-            bar_data['label'] = np.NaN
-            bar_data['label'].ix[time_freqm] = [i for i in range(len(time_freqm))]
-            bar_data['label'] = bar_data['label'].fillna(method = 'bfill')
-            bar_data = bar_data.groupby('label').agg(EXT_Bar_Rule)
-            bar_data.index =  time_freqm
+            if bar_data.index.size < 6:
+                bar_data = bar_data.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule)
+            else: 
+                bar_data['label'] = np.NaN
+                bar_data['label'].ix[time_freqm] = [i for i in range(len(time_freqm))]
+                bar_data['label'] = bar_data['label'].fillna(method = 'bfill')
+                bar_data = bar_data.groupby('label').agg(EXT_Bar_Rule)
+                bar_data.index =  time_freqm
+            bar_data_fmt = bar_data.copy()
         else:        
             bar_data = bardata1m.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule)
-        #add new part
-        bar_data_fmt = bar_data.ix[time_freqm]
-        bar_data_fmt = bar_data_fmt.dropna(axis=0)
+            bar_data_fmt = bar_data.ix[time_freqm]
+        bar_data_fmt = bar_data_fmt.dropna(axis=0, how = 'all')
         return bar_data_fmt
 
     #----------------------------------------------------------------------
