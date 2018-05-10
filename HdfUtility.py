@@ -42,10 +42,9 @@ class HdfUtility:
         store = HDFStore(path,mode = 'r')
         if kind1 == EXT_Rawdata:
             key = kind1+'/'+excode+'/'+symbol+'/'+kind3
-            data = store[key].ix[((store[key][EXT_Out_Date]>=pd.to_datetime(startdate))&(store[key][EXT_Out_Date]<=pd.to_datetime(enddate))),:]
         if kind1 == EXT_Stitch:
             key = kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
-            data = store[key].ix[((store[key][EXT_Out_Date]>=pd.to_datetime(startdate))&(store[key][EXT_Out_Date]<=pd.to_datetime(enddate))),:]
+        data = store[key].ix[((store[key].index.get_level_values(0)>=pd.to_datetime(startdate))&(store[key].index.get_level_values(0)<=pd.to_datetime(enddate))),:]
         store.close()
         return data
 
