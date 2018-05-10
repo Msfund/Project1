@@ -30,9 +30,7 @@ HDF
     /Indicator
         /CFE
             /IF
-                /Indi
-
-
+                /Indicator_name
 '''
 class HdfUtility:
 
@@ -56,7 +54,11 @@ class HdfUtility:
             return
         data = store[key].ix[((store[key].index.get_level_values(0)>=pd.to_datetime(startdate))&(store[key].index.get_level_values(0)<=pd.to_datetime(enddate))),:]
         store.close()
-        return data
+
+        f = h5py.File(path,'r')
+        params = f[key].attrs['Params']
+        f.close()
+        return data,params
 
     def hdfWrite(self,path,excode,symbol,indata,kind1,kind2,kind3):
         # kind1为 'Rawdata'、'Stitch'、'Indicator'
@@ -81,14 +83,14 @@ class HdfUtility:
             f = h5py.File(path,'a')
             try:
                 store[key]
-            except KeyError:
+            except KeyError: # 路径不存在时创建
                 store[key] = indata
                 f[key].attrs['Params'] = kind3
             else:
-                if f[key].attrs['Params'] == kind3:
+                if f[key].attrs['Params'] == kind3: #Params匹配时合并
                     adddata = indata[~indata.index.isin(store[key].index)]
                     store.append(key,adddata)
-                else:
+                else: # Params不匹配时覆盖
                     store[key] = indata
                     f[key].attrs['Params'] = kind3
             f.close()
