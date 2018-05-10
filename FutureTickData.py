@@ -45,7 +45,7 @@ class HisFutureTick(object):
         hdf = HdfUtility()
         #un pack the packed data file one by one
         for f in f_packed:
-            # self.unpack(filename=f, path_temp=path_temp)
+        #   self.unpack(filename=f, path_temp=path_temp)
         #   get the tick data file
             files_tick = self.listFiles(path =path_temp_full, patter_ex=file_unpacked_ex)
             file_SN_df = self.getSeriesNum(tickfiles=files_tick)
@@ -123,7 +123,7 @@ class HisFutureTick(object):
             if exchange == EXT_EXCHANGE_CFE :
                 tick_data[EXT_Bar_DateTime] = pd.to_datetime(tradeDate+' '+ tick_data[EXT_Bar_Time])
             elif exchange == EXT_EXCHANGE_DCE :
-                tick_data[EXT_Bar_DateTime] = pd.to_datetime(tick_data[EXT_Bar_Date]+' '+tick_data[EXT_Bar_Time])
+                tick_data[EXT_Bar_DateTime] = pd.to_datetime(tradeDate+' '+tick_data[EXT_Bar_Time])
             else:
                 raise NameError(exchange)
             tick_data = tick_data.drop_duplicates(EXT_Bar_DateTime,keep = 'first')
@@ -162,7 +162,6 @@ class HisFutureTick(object):
     #----------------------------------------------------------------------
     def getResampleBar(self, bardata1m, tradetime,tradeDate, freq='5T'):
         '''1min bar to 'freq' bar'''
-
         time_freqm = self.getTradeTime(dateStr=tradeDate, tradetimeRange = tradetime, freq=freq)
         if freq=='H':
             bar_data = bardata1m.copy()
@@ -174,16 +173,11 @@ class HisFutureTick(object):
                 bar_data['label'] = bar_data['label'].fillna(method = 'bfill')
                 bar_data = bar_data.groupby('label').agg(EXT_Bar_Rule)
                 bar_data.index =  time_freqm
-            bar_data_fmt = bar_data
+            bar_data_fmt = bar_data.copy()
         else:
             bar_data = bardata1m.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule)
-        #add new part
-        bar_data_fmt = bar_data.ix[time_freqm]
+            bar_data_fmt = bar_data.ix[time_freqm]
         bar_data_fmt = bar_data_fmt.dropna(axis=0, how = 'all')
-
-        bar_data = bardata1m.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule)
-        bar_data = bardata1m.resample(rule=freq).agg(EXT_Bar_Rule)
-        bar_data_fmt = bar_data.dropna(axis=0, how='any')
         return bar_data_fmt
 
     #----------------------------------------------------------------------
@@ -206,7 +200,7 @@ class HisFutureTick(object):
     #----------------------------------------------------------------------
     def getTradeTimeRange(self, tickerSim, type_l=['AM', 'PM', 'EV']):
         '''  get the trading data of tickerSim  '''
-        ticker1 = []
+        ticker1 = EXT_DCE_ALL
         ticker2 = [EXT_CFE_TF, EXT_CFE_T]
         ticker3 = [EXT_CFE_IF, EXT_CFE_IC,EXT_CFE_IH]
 
@@ -358,7 +352,3 @@ class HisFutureTick(object):
     def unrar(self, rar_file, dir_name):      # rarfile需要unrar支持, linux下pip install unrar, windows下在winrar文件夹找到unrar,加到path里
         rarobj = rarfile.RarFile(rar_file.decode('utf-8'))
         rarobj.extractall(dir_name.decode('utf-8'))
-
-if __name__ == '__main__':
-    a = HisFutureTick('F:\\data_hft','C:\\Users\\user\\GitHub\\Project1\\out.hdf5','CFE')
-    a.packedTick2Bar()

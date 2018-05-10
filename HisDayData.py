@@ -223,6 +223,3 @@ class HisDayData:
         sub_data.sort_values(by=[EXT_Out_Date,EXT_Out_Asset],inplace=True)
         return dom_data, sub_data
 
-if __name__  ==  '__main__':
-    a = HisDayData()
-    a.getData()
