@@ -1,9 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Apr 24 16:42:32 2018
+# encoding: UTF-8
 
-@author: She
-"""
+EXT_Wind_User = 'fe'
+EXT_Wind_Password = 'fe'
+EXT_Wind_Link = '192.168.100.22:1521/winddb'
+EXT_Path = 'E:\\work\\vnpy-1.7\\getdata3\\out3.hdf5'
+EXT_Start = '20120101'
+EXT_End = '20171231'
+
 EXT_Info_File = 'filename'
 EXT_Info_Exchange = 'exchange'
 EXT_Info_Ticker = 'ticker'
@@ -11,27 +14,35 @@ EXT_Info_TickerSim = 'tickerSim'
 EXT_Info_TradeDate = 'tradeDate'
 EXT_Info_SeriesNum = 'seriesNum'
 
-# period of bar/tick
-EXT_PERIOD_1MIN = '1m'
-EXT_PERIOD_5MIN = '5m'
-EXT_PERIOD_15MIN = '15m'
-EXT_PERIOD_60MIN = '60m'
-EXT_PERIOD_1DAY = '1d'
+EXT_Rawdata = 'Rawdata'
+EXT_Stitch = 'Stitch'
+EXT_Indicator = 'Indicator'
+EXT_Period = 'Period'
+EXT_Rule = 'Rule'
+EXT_Series_00 = '00'
+EXT_Series_01 = '01'
+EXT_Period_1m = '1m'
+EXT_Period_5m = '5m'
+EXT_Period_15m = '15m'
+EXT_Period_60m = '60m'
+EXT_Period_1d = '1d'
 
 # code of exchange
-EXT_EXCHANGE_SHFE = 'SHF' #shang hai Suo
+EXT_EXCHANGE_SHFE = 'SHFE' #shang hai Suo
 EXT_EXCHANGE_DCE  = 'DCE'  #Da Lian Suo
-EXT_EXCHANGE_CZCE = 'CZC' #ZhengZhou Suo
+EXT_EXCHANGE_CZCE = 'CZCE' #ZhengZhou Suo
 EXT_EXCHANGE_CFE  = 'CFE'  #Zhong Jin Suo
 
-# code for Commodity/finance Future in CFE
+# code for Commodity/finance Future
 EXT_CFE_IF = 'IF'
 EXT_CFE_IH = 'IH'
 EXT_CFE_IC = 'IC'
 EXT_CFE_T  = 'T'
 EXT_CFE_TF = 'TF'
-EXT_CFE_ALL = ['IF','IC','IH','TF','T']
-# code for Commodity/finance Future in SHFE
+EXT_CFE_STOCK = ['IF','IC','IH']
+EXT_CFE_BOND = ['TF','T']
+EXT_CFE_ALL = EXT_CFE_STOCK + EXT_CFE_BOND
+
 EXT_SHFE_CU = 'CU'
 EXT_SHFE_AL = 'AL'
 EXT_SHFE_ZN = 'ZN'
@@ -46,7 +57,7 @@ EXT_SHFE_BU = 'BU'
 EXT_SHFE_HC = 'HC'
 EXT_SHFE_NI = 'NI'
 EXT_SHFE_SN = 'SN'
-EXT_SHFE_ALL = ['CU','AL','ZN','RU','FU','AU','AG','RB','WR','PB','BU','HC','NI','SN']
+EXT_SHFE_ALL = ['CU','AL','ZN','RU','AU','AG','RB','WR','PB','BU','HC','NI','SN'] #'FU'
 # code for Commodity/finance Future in DCE
 EXT_DCE_A = 'A'
 EXT_DCE_B = 'B'
@@ -84,14 +95,15 @@ EXT_CZCE_JR = 'JR'
 EXT_CZCE_SF = 'SF'
 EXT_CZCE_SM = 'SM'
 EXT_CZCE_ALL = ['PM','WH','CF','SR','OI','TA','RI','LR','MA','FG','RS','RM','TC','ZC','JR','SF','SM']
-# path
 
 # Wind filename
-EXT_CFE_DATA_FILE = 'filesync.CIndexFuturesEODPrices'
+EXT_CFE_STOCK_FILE = 'filesync.CIndexFuturesEODPrices'
+EXT_CFE_BOND_FILE = 'filesync.CBondFuturesEODPrices'
 EXT_SHFE_DATA_FILE = 'filesync.CCommodityFuturesEODPrices'
-EXT_CZCE_DATA_FILE = 'filesync.CCommodityFuturesEODPrices'
 EXT_DCE_DATA_FILE = 'filesync.CCommodityFuturesEODPrices'
-# 
+EXT_CZCE_DATA_FILE = 'filesync.CCommodityFuturesEODPrices'
+EXT_Delistdate_File = 'filesync.CFuturesDescription'
+
 #Splitor
 EXT_SPLITOR_PORINT = '.'
 EXT_SPLITOR_COMMA = ','
@@ -114,7 +126,6 @@ EXT_TradingTime_Dict = {'AM1':[EXT_AM_Begin1, EXT_AM_End],
                        'PM': [EXT_PM_Begin, EXT_PM_End],
                        'EV': [EXT_EV_Begin, EXT_EV_End]}
 
-
 #Bar
 EXT_Bar_TickerSim = 'TickerSim'
 EXT_Bar_Ticker = 'Ticker'
@@ -133,6 +144,21 @@ EXT_Bar_Settle = 'Settle'
 EXT_Bar_UpLimit = 'UpLimit'
 EXT_DownLimit = 'DownLimit'
 EXT_AdjFactor = 'AdjFactor'
+
+EXT_In_Header = 'trade_dt,s_info_windcode,s_dq_presettle,s_dq_open,s_dq_high,s_dq_low,s_dq_close,s_dq_settle,s_dq_volume,s_dq_oi'
+EXT_In_Header2 = 's_info_windcode,s_info_delistdate'
+EXT_In_Date = 'trade_dt'
+EXT_In_Asset = 's_info_windcode'
+EXT_In_Delistdate = 's_info_delistdate'
+
+EXT_Out_Header = 'Date,Asset,PreSettle,Open,High,Low,Close,Settle,Volume,OpenInterest'
+EXT_Out_Header2 = 'Asset,Delistdate'
+EXT_Out_Date = 'Date'
+EXT_Out_Asset = 'Asset'
+EXT_Out_AdjFactor = 'AdjFactor'
+EXT_Out_Close = 'Close'
+EXT_Out_OpenInterest = 'OpenInterest'
+EXT_Out_Delistdate = 'Delistdate'
 
 #citicsf tick file hear, may be change for one TickerSim, so I workaround it by a tickfileheadmap dict.
 EXT_Header_CSF1 = 'Time,LastPrice,LVolume,BidPrice,BidVolume,AskPrice,AskVolume,OpenInterest,TradeVolume,LastTurnover,Turnover'
@@ -171,7 +197,4 @@ EXT_Series_dict = {1:EXT_Series_1, 2:EXT_Series_2, 3:EXT_Series_3, 4:EXT_Series_
                    9:EXT_Series_9, 10:EXT_Series_10, 11:EXT_Series_11, 12:EXT_Series_12}
 
 EXT_FILE_CSV = '.csv'
-# =============================================================================
-# for i in range(len(SHFcode)):
-#     txt_name = 'EXT_SHF'+SHFcode[0]+"_ = '"+SHFcode[0]+"'"
-# =============================================================================
+EXT_Freq_Period = {'5T':'5m','15T':'15m','30T':'30m','H':'60m', 'D':'1d'}
