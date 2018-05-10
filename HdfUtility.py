@@ -42,8 +42,11 @@ class HdfUtility:
         store = HDFStore(path,mode = 'r')
         if kind1 == EXT_Rawdata:
             key = kind1+'/'+excode+'/'+symbol+'/'+kind3
-        if kind1 == EXT_Stitch:
+        elif kind1 == EXT_Stitch:
             key = kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
+        else:
+            print("kind not supported")
+            return
         data = store[key].ix[((store[key].index.get_level_values(0)>=pd.to_datetime(startdate))&(store[key].index.get_level_values(0)<=pd.to_datetime(enddate))),:]
         store.close()
         return data
@@ -58,8 +61,11 @@ class HdfUtility:
         store = HDFStore(path,mode='a')
         if kind1 == EXT_Rawdata:
             key = kind1+'/'+excode+'/'+symbol+'/'+kind3
-        if kind1 == EXT_Stitch:
+        elif kind1 == EXT_Stitch:
             key=kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
+        else:
+            print("kind not supported")
+            return
         try:
             store[key]
         except KeyError:
