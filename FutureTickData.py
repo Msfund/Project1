@@ -362,4 +362,3 @@ class HisFutureTick(object):
 if __name__ == '__main__':
     a = HisFutureTick('F:\\data_hft','C:\\Users\\user\\GitHub\\Project1\\out.hdf5','CFE')
     a.packedTick2Bar()
-
