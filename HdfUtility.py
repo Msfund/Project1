@@ -54,7 +54,7 @@ class HdfUtility:
             return
         data = store[key].ix[((store[key].index.get_level_values(0)>=pd.to_datetime(startdate))&(store[key].index.get_level_values(0)<=pd.to_datetime(enddate))),:]
         store.close()
-        if kin1 == EXT_Indicator:
+        if kind1 == EXT_Indicator:
             f = h5py.File(path,'r')
             params = f[key].attrs['Params']
             f.close()
