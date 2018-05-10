@@ -76,17 +76,31 @@ class HdfUtility:
         else:
             print("kind not supported")
             return
-        try:
-            store[key]
-        except KeyError:
-            store[key] = indata
+
+        if kind1 ==EXT_Indicator:
+            f = h5py.File(path,'a')
+            try:
+                store[key]
+            except KeyError:
+                store[key] = indata
+                f[key].attrs['Params'] = kind3
+            else:
+                if f[key].attrs['Params'] == kind3:
+                    adddata = indata[~indata.index.isin(store[key].index)]
+                    store.append(key,adddata)
+                else:
+                    store[key] = indata
+                    f[key].attrs['Params'] = kind3
+            f.close()
+            store.close()
         else:
-            adddata = indata[~indata.index.isin(store[key].index)]
+            try:
+                store[key]
+            except KeyError:
+                store[key] = indata
+            else:
+                adddata = indata[~indata.index.isin(store[key].index)]
             if kind2 in [EXT_Series_00,EXT_Series_01]:
                 adddata[EXT_Out_AdjFactor] = adddata[EXT_Out_AdjFactor]*store[key][EXT_Out_AdjFactor].iloc[-1]/adddata[EXT_Out_AdjFactor].iloc[0]
             store.append(key,adddata)
-        if kind1 == EXT_Indicator:
-            f = h5py.File(path,'a')
-            f[key].attrs['Params'] = kind3
-            f.close()
-        store.close()
+            store.close()
