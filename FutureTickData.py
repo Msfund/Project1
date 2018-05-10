@@ -1,11 +1,3 @@
-# encoding: UTF-8
-#pip install pyunpack
-#pit install patool
-#on window platform, the rar file need the 7zip installed and add it to the OS path env.
-"""
-  tick data process from CITICS F, if on other data pls check the tick file format and the dir structure.
-  some Info get from the dir/file name.
-"""
 import os
 import re
 import json
@@ -22,7 +14,7 @@ import zipfile
 import rarfile
 from pyunpack import Archive
 
-from vnpy.trader.language.english.constant import *
+#from vnpy.trader.language.english.constant import *
 
 from dataUlt import *
 from HdfUtility import *
@@ -53,7 +45,7 @@ class HisFutureTick(object):
         hdf = HdfUtility()
         #un pack the packed data file one by one
         for f in f_packed:
-            self.unpack(filename=f, path_temp=path_temp)
+            # self.unpack(filename=f, path_temp=path_temp)
         #   get the tick data file
             files_tick = self.listFiles(path =path_temp_full, patter_ex=file_unpacked_ex)
             file_SN_df = self.getSeriesNum(tickfiles=files_tick)
@@ -67,10 +59,21 @@ class HisFutureTick(object):
                 bar1m_fm=bar1m.reset_index().set_index([EXT_Bar_DateTime,EXT_Out_Asset])
                 hdf.hdfWrite(self.bar_path,self.exchange,symbol,bar1m_fm,EXT_Rawdata,None,EXT_Period_1m)
                 #other freq bars
+                #-------------------------------------
+                # new part
+                tradetime = ['AM', 'PM']
+                #get info
+                tickerSim = symbol
+                tradeDate = row[EXT_Info_TradeDate]
+                timeRange = self.getTradeTimeRange(tickerSim, type_l=tradetime)
+                #-------------------------------------
                 for fr in freq:
-                    bars_fr = self.getResampleBar(bardata1m=bar1m, freq=fr)
+                    #getResampleBar新增个参数
+                    bars_fr = self.getResampleBar(bardata1m=bar1m,tradetime = timeRange, tradeDate =tradeDate, freq=fr)
                     bars_fr.insert(0,EXT_Out_Asset,bar1m[EXT_Out_Asset])
-                    bars_fr_fm=bars_fr.reset_index().set_index([EXT_Bar_DateTime,EXT_Out_Asset])
+                    bars_fr = bars_fr.reset_index()
+                    bars_fr.rename(columns={'index':EXT_Bar_DateTime},inplace = True)
+                    bars_fr_fm=bars_fr.set_index([EXT_Bar_DateTime,EXT_Out_Asset])
                     hdf.hdfWrite(self.bar_path,self.exchange,symbol,bars_fr_fm,EXT_Rawdata,None,EXT_Freq_Period[fr])
 
         self.rmdir(path=path_temp)
@@ -107,6 +110,7 @@ class HisFutureTick(object):
             for k in data_empty.keys():
                 data_empty[k] = np.NaN
             data_empty[EXT_Bar_DateTime]=pd.to_datetime(tradeDate+' '+timeRange[-1][-1])
+            del data_empty[EXT_Bar_Time]  #新增
             bar1min_fmt = pd.DataFrame(data_empty, index=[0])
             bar1min_fmt.set_index(EXT_Bar_DateTime, inplace=True)
         else:
@@ -122,7 +126,6 @@ class HisFutureTick(object):
                 tick_data[EXT_Bar_DateTime] = pd.to_datetime(tick_data[EXT_Bar_Date]+' '+tick_data[EXT_Bar_Time])
             else:
                 raise NameError(exchange)
-
             tick_data = tick_data.drop_duplicates(EXT_Bar_DateTime,keep = 'first')
             #add datetime index
             #tick_data.index = tick_data[EXT_Bar_DateTime]
@@ -157,11 +160,25 @@ class HisFutureTick(object):
         bar1min_fmt[EXT_Bar_Ticker]           = ticker
         return bar1min_fmt
     #----------------------------------------------------------------------
-    def getResampleBar(self, bardata1m, freq='5T'):
+    def getResampleBar(self, bardata1m, tradetime,tradeDate, freq='5T'):
         '''1min bar to 'freq' bar'''
-        bar_data = bardata1m.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule)
-        bar_data = bardata1m.resample(rule=freq).agg(EXT_Bar_Rule)
-        bar_data_fmt = bar_data.dropna(axis=0, how='all')
+        time_freqm = self.getTradeTime(dateStr=tradeDate, tradetimeRange = tradetime, freq=freq)
+        if freq=='H':
+            bar_data = bardata1m.copy()
+            if bar_data.index.size < 6:
+                bar_data = bar_data.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule)
+            else:
+                bar_data['label'] = np.NaN
+                bar_data['label'].ix[time_freqm] = [i for i in range(len(time_freqm))]
+                bar_data['label'] = bar_data['label'].fillna(method = 'bfill')
+                bar_data = bar_data.groupby('label').agg(EXT_Bar_Rule)
+                bar_data.index =  time_freqm
+            bar_data_fmt = bar_data
+        else:
+            bar_data = bardata1m.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule)
+        #add new part
+        bar_data_fmt = bar_data.ix[time_freqm]
+        bar_data_fmt = bar_data_fmt.dropna(axis=0, how = 'all')
         return bar_data_fmt
 
     #----------------------------------------------------------------------
@@ -178,10 +195,8 @@ class HisFutureTick(object):
     def getEmptyBar1mOfDay(self, dateStr,tradetimeRange):
         '''get the empty 1 minute bar on trade date time range'''
         date1m = self.getTradeTime1m(dateStr=dateStr, tradetimeRange=tradetimeRange)
-
         bar_dict = {EXT_Bar_Open:np.nan, EXT_Bar_Close:np.nan, EXT_Bar_High:np.nan,EXT_Bar_Low:np.nan, EXT_Bar_Volume:0, EXT_Bar_Turnover:0, EXT_Bar_OpenInterest:np.nan}
         bars = pd.DataFrame(data=bar_dict, index=date1m)
-
         return bars
     #----------------------------------------------------------------------
     def getTradeTimeRange(self, tickerSim, type_l=['AM', 'PM', 'EV']):
@@ -342,3 +357,4 @@ class HisFutureTick(object):
 if __name__ == '__main__':
     a = HisFutureTick('F:\\data_hft','C:\\Users\\user\\GitHub\\Project1\\out.hdf5','CFE')
     a.packedTick2Bar()
+
