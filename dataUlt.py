@@ -1,9 +1,9 @@
 # encoding: UTF-8
-
+EXT_Hdf_Path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
+EXT_Data_Path = 'F:\\data_hft'
 EXT_Wind_User = 'fe'
 EXT_Wind_Password = 'fe'
 EXT_Wind_Link = '192.168.100.22:1521/winddb'
-EXT_Path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
 EXT_Start = '20120101'
 EXT_End = '20171231'
 
