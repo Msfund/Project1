@@ -62,7 +62,7 @@ class HisFutureTick(object):
                 #-------------------------------------
                 # new part
                 tradetime = ['AM', 'PM']
-                #get info
+                #get info        
                 tickerSim = symbol
                 tradeDate = row[EXT_Info_TradeDate]
                 timeRange = self.getTradeTimeRange(tickerSim, type_l=tradetime)
@@ -162,28 +162,22 @@ class HisFutureTick(object):
     #----------------------------------------------------------------------
     def getResampleBar(self, bardata1m, tradetime,tradeDate, freq='5T'):
         '''1min bar to 'freq' bar'''
-
         time_freqm = self.getTradeTime(dateStr=tradeDate, tradetimeRange = tradetime, freq=freq)
         if freq=='H':
             bar_data = bardata1m.copy()
             if bar_data.index.size < 6:
                 bar_data = bar_data.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule)
-            else:
+            else: 
                 bar_data['label'] = np.NaN
                 bar_data['label'].ix[time_freqm] = [i for i in range(len(time_freqm))]
                 bar_data['label'] = bar_data['label'].fillna(method = 'bfill')
                 bar_data = bar_data.groupby('label').agg(EXT_Bar_Rule)
                 bar_data.index =  time_freqm
-            bar_data_fmt = bar_data
-        else:
+            bar_data_fmt = bar_data.copy()
+        else:        
             bar_data = bardata1m.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule)
-        #add new part
-        bar_data_fmt = bar_data.ix[time_freqm]
+            bar_data_fmt = bar_data.ix[time_freqm]
         bar_data_fmt = bar_data_fmt.dropna(axis=0, how = 'all')
-
-        bar_data = bardata1m.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule)
-        bar_data = bardata1m.resample(rule=freq).agg(EXT_Bar_Rule)
-        bar_data_fmt = bar_data.dropna(axis=0, how='any')
         return bar_data_fmt
 
     #----------------------------------------------------------------------
