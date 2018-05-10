@@ -54,11 +54,12 @@ class HdfUtility:
             return
         data = store[key].ix[((store[key].index.get_level_values(0)>=pd.to_datetime(startdate))&(store[key].index.get_level_values(0)<=pd.to_datetime(enddate))),:]
         store.close()
-
-        f = h5py.File(path,'r')
-        params = f[key].attrs['Params']
-        f.close()
-        return data,params
+        if kin1 == EXT_Indicator:
+            f = h5py.File(path,'r')
+            params = f[key].attrs['Params']
+            f.close()
+            return data,params
+        return data
 
     def hdfWrite(self,path,excode,symbol,indata,kind1,kind2,kind3):
         # kind1为 'Rawdata'、'Stitch'、'Indicator'
