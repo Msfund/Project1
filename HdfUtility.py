@@ -28,6 +28,10 @@ HDF
                   /60m
                   /1d
     /Indicator
+        /CFE
+            /IF
+                /Indi
+
 
 '''
 class HdfUtility:
@@ -39,11 +43,14 @@ class HdfUtility:
         # 读各个频率的Rawdata: kind1='Rawdata',kind2=None,kind3='1d'
         # 读StitchRule:       kind1='Stitch', kind2='00',kind3=None
         # 读STitchData:       kind1='Stitch', kind2='00',kind3='1d'
+        # 读Indicator：       kind1='Indicator',kind2='Indicator_name',kind3=None
         store = HDFStore(path,mode = 'r')
         if kind1 == EXT_Rawdata:
             key = kind1+'/'+excode+'/'+symbol+'/'+kind3
         elif kind1 == EXT_Stitch:
             key = kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
+        elif kind1 == EXT_Indicator:
+            key = kind1+'/'+excode+'/'+symbol+kind2
         else:
             print("kind not supported")
             return
@@ -58,11 +65,14 @@ class HdfUtility:
         # 写各个频率的Rawdata: kind1='Rawdata',kind2=None,kind3='1d'
         # 写StitchRule:       kind1='Stitch', kind2='00',kind3=None
         # 写StitchData:       kind1='Stitch', kind2='00',kind3='1d'
+        # 写Indicator：       kind1='Indicator',kind2='Indicator_name',kind3='params'
         store = HDFStore(path,mode='a')
         if kind1 == EXT_Rawdata:
             key = kind1+'/'+excode+'/'+symbol+'/'+kind3
         elif kind1 == EXT_Stitch:
-            key=kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
+            key = kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
+        elif kind1 == EXT_Indicator:
+            key = kind1+'/'+excode+'/'+symbol+kind2
         else:
             print("kind not supported")
             return
@@ -75,4 +85,8 @@ class HdfUtility:
             if kind2 in [EXT_Series_00,EXT_Series_01]:
                 adddata[EXT_Out_AdjFactor] = adddata[EXT_Out_AdjFactor]*store[key][EXT_Out_AdjFactor].iloc[-1]/adddata[EXT_Out_AdjFactor].iloc[0]
             store.append(key,adddata)
+        if kind1 == EXT_Indicator:
+            f = h5py.File(path,'a')
+            f[key].attrs['Params'] = kind3
+            f.close()
         store.close()
