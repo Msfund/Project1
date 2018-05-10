@@ -1,7 +1,19 @@
 
 EXT_Wind_User = 'fe'
+EXT_Wind_Password = 'fe'
 EXT_Wind_Link = '192.168.100.22:1521/winddb'
 EXT_Path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
+##Saving Structure: datatype
+EXT_Rawdata = 'Rawdata'
+EXT_Stitch = 'Stitch'
+EXT_Indicator = 'Indicator'
+##Saving location:loca
+EXT_Period = 'Period'
+EXT_Rule = 'Rule'
+## future series Num
+EXT_Series_0 = '00'
+EXT_Series_1 = '01'
+EXT_Period_1 = '1d'
 # code of exchange
 EXT_EXCHANGE_CFE  = 'CFE'  #Zhong Jin Suo
 EXT_EXCHANGE_SHFE = 'SHF' #shang hai Suo
@@ -14,8 +26,8 @@ EXT_CFE_IC = 'IC'
 EXT_CFE_T  = 'T'
 EXT_CFE_TF = 'TF'
 EXT_CFE_STOCK = ['IF','IC','IH']
-EXT_CFE_BOND=['TF','T']
-EXT_CFE_ALL=EXT_CFE_STOCK+EXT_CFE_BOND
+EXT_CFE_BOND = ['TF','T']
+EXT_CFE_ALL = EXT_CFE_STOCK + EXT_CFE_BOND
 # code for Commodity/finance Future in SHFE
 EXT_SHFE_CU = 'CU'
 EXT_SHFE_AL = 'AL'
@@ -92,8 +104,3 @@ EXT_Out_AdjFactor = 'AdjFactor'
 EXT_Out_Close = 'Close'
 EXT_Out_OpenInterest = 'OpenInterest'
 EXT_Out_Delistdate = 'Delistdate'
-
-## future series Num
-EXT_Series_0 = '00'
-EXT_Series_1 = '01'
-EXT_Period_1 = '1d'

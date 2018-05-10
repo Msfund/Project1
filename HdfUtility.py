@@ -2,11 +2,19 @@ import numpy as np
 import pandas as pd
 from pandas.io.pytables import HDFStore
 import re
-from rawUlt import *
+from dataUlt import *
 import h5py
 pd.set_option('io.hdf.default_format','table')
 '''
 HDF
+    /Rawdata
+        /CFE
+            /IC
+                /1m
+                /5m
+                /30m
+                /1h
+                /1d
     /Stitch
         /CFE
             /IF
@@ -19,40 +27,52 @@ HDF
                   /15m
                   /60m
                   /1d
+    /Indicator
+
 '''
 class HdfUtility:
-    # 读，kind为 '00'、'01'、'1d'
-    def hdfRead(self,path,excode,symbol,startdate,enddate,kind):
+
+    def hdfRead(self,path,excode,symbol,kind1,kind2,kind3,startdate=EXT_Start,enddate=EXT_End):
+        # kind1为 'Rawdata',Stitch','Indicator'
+        # kind2为 '00' '01'
+        # kind3为 '1d' '60m' '30m' '15m' '5m' '1m'
+        # 读各个频率的Rawdata: kind1='Rawdata',kind2=None,kind3='1d'
+        # 读StitchRule:       kind1='Stitch', kind2='00',kind3=None
+        # 读STitchData:       kind1='Stitch', kind2='00',kind3='1d'
         store = HDFStore(path,mode = 'r')
-        key = 'Stitch/'+excode+'/'+symbol+'/Rule/'+kind if kind in [EXT_Series_0,EXT_Series_1] else 'Stitch/'+excode+'/'+symbol+'/Period/'+kind
-        data = store[key].ix[((store[key][EXT_Out_Date]>=startdate)&(store[key][EXT_Out_Date]<=enddate)),:]
+        if kind1 == EXT_Rawdata:
+            key = kind1+'/'+excode+'/'+symbol+'/'+kind3
+        elif kind1 == EXT_Stitch:
+            key = kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
+        else:
+            print("kind not supported")
+            return
+        data = store[key].ix[((store[key].index.get_level_values(0)>=pd.to_datetime(startdate))&(store[key].index.get_level_values(0)<=pd.to_datetime(enddate))),:]
         store.close()
         return data
-    # 写, kind为 '00'、'01'、'1d'
-    def hdfWrite(self,path,excode,symbol,startdate,enddate,indata,kind):
+
+    def hdfWrite(self,path,excode,symbol,indata,kind1,kind2,kind3):
+        # kind1为 'Rawdata'、'Stitch'、'Indicator'
+        # kind2为 '00' '01'
+        # kind3为 '1d' '60m' '30m' '15m' '5m' '1m'
+        # 写各个频率的Rawdata: kind1='Rawdata',kind2=None,kind3='1d'
+        # 写StitchRule:       kind1='Stitch', kind2='00',kind3=None
+        # 写StitchData:       kind1='Stitch', kind2='00',kind3='1d'
         store = HDFStore(path,mode='a')
-        key = 'Stitch/'+excode+'/'+symbol+'/Rule/'+kind if kind in [EXT_Series_0,EXT_Series_1] else 'Stitch/'+excode+'/'+symbol+'/Period/'+kind
+        if kind1 == EXT_Rawdata:
+            key = kind1+'/'+excode+'/'+symbol+'/'+kind3
+        elif kind1 == EXT_Stitch:
+            key=kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
+        else:
+            print("kind not supported")
+            return
         try:
             store[key]
         except KeyError:
             store[key] = indata
-            store.close()
-            f = h5py.File(path,'a')
-            f[key].attrs['From_date'] = startdate
-            f[key].attrs['To_date'] = enddate
-            f.close()
         else:
-            f = h5py.File(path,'a')
-            fromdate = f[key].attrs['From_date']
-            todate = f[key].attrs['To_date']
-            adddata = indata[pd.concat([indata[EXT_Out_Date] < fromdate,indata[EXT_Out_Date] > todate],axis=1).any(axis=1)]
-            if adddata.shape[0] == 0:
-                print("No data added")
-            else:
-                if kind in [EXT_Series_0,EXT_Series_1]:
-                    adddata[EXT_Out_AdjFactor] = adddata[EXT_Out_AdjFactor]*store[key][EXT_Out_AdjFactor].iloc[-1]/adddata[EXT_Out_AdjFactor].iloc[0]
-                store.append(key,adddata)
-                f[key].attrs['From_date'] = min(startdate,fromdate)
-                f[key].attrs['To_date'] = max(enddate,todate)
-                f.close()
+            adddata = indata[~indata.index.isin(store[key].index)]
+            if kind2 in [EXT_Series_00,EXT_Series_01]:
+                adddata[EXT_Out_AdjFactor] = adddata[EXT_Out_AdjFactor]*store[key][EXT_Out_AdjFactor].iloc[-1]/adddata[EXT_Out_AdjFactor].iloc[0]
+            store.append(key,adddata)
         store.close()
