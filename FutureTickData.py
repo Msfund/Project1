@@ -359,6 +359,3 @@ class HisFutureTick(object):
         rarobj = rarfile.RarFile(rar_file.decode('utf-8'))
         rarobj.extractall(dir_name.decode('utf-8'))
 
-if __name__ == '__main__':
-    a = HisFutureTick('F:\\data_hft','C:\\Users\\user\\GitHub\\Project1\\out.hdf5','CFE')
-    a.packedTick2Bar()
