@@ -23,8 +23,8 @@ class HisDayData:
     def getData(self,is_save_stitch=True):
         asset_list = {}
         asset_list[EXT_EXCHANGE_CFE] = EXT_CFE_ALL
-        # asset_list[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
-        # asset_list[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
+        asset_list[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
+        asset_list[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
         # asset_list[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
         hdf = HdfUtility()
         for excode,symbol in asset_list.items():
@@ -47,8 +47,8 @@ class HisDayData:
         #raw_data是没有任何index，在使用前有可能需要reset_index()之后再进行处理
         code_num = pd.Series([re.findall(r"\d*",raw_data[EXT_Out_Asset][i])[2] for i in range(len(raw_data[EXT_Out_Asset]))])
         raw_len = pd.Series([len(code_num[i]) for i in range(len(code_num))])
-        raw_data[EXT_Out_Asset].ix[raw_len == 3] = symbol+'1'+code_num.ix[raw_len == 3]+'.CZC'
-        raw_data[EXT_Out_Asset].ix[raw_len == 4] = symbol+code_num.ix[raw_len == 4]+'.CZC'
+        raw_data[EXT_Out_Asset].ix[raw_len == 3] = symbol+'1'+code_num.ix[raw_len == 3]+'.CZCE'
+        raw_data[EXT_Out_Asset].ix[raw_len == 4] = symbol+code_num.ix[raw_len == 4]+'.CZCE'
         return raw_data
 
     def getQuoteWind(self,excode,symbol,startdate=EXT_Start,enddate=EXT_End):

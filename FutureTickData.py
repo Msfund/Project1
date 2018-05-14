@@ -100,7 +100,12 @@ class HisFutureTick(object):
         tick_rawdata = pd.read_table(filename_tick,sep =',')
         colnames = ",".join(tick_rawdata.columns)
         colnames = colnames.replace(' ', '')
-        header_dict = EXT_TickFileHeaderMap_Dict[colnames]
+        if EXT_Bar_LastTurnover not in colnames:
+            tick_rawdata.insert(0,EXT_Bar_LastTurnover,np.zeros(tick_rawdata.shape[0]))
+            colnames = colnames+','+EXT_Bar_LastTurnover
+            tick_rawdata.insert(0,EXT_Bar_Turnover,np.zeros(tick_rawdata.shape[0]))
+            colnames = colnames+','+EXT_Bar_Turnover
+        header_dict = EXT_TickFileHeaderMap_Dict[colnames] #这里原来是EXT_TickFileHeaderMap_Dict[colnames]
         #TODO: add the evening trading in future
         timeRange = self.getTradeTimeRange(tickerSim, type_l=tradetime)
 
@@ -123,6 +128,8 @@ class HisFutureTick(object):
             if exchange == EXT_EXCHANGE_CFE :
                 tick_data[EXT_Bar_DateTime] = pd.to_datetime(tradeDate+' '+ tick_data[EXT_Bar_Time])
             elif exchange == EXT_EXCHANGE_DCE :
+                tick_data[EXT_Bar_DateTime] = pd.to_datetime(tradeDate+' '+tick_data[EXT_Bar_Time])
+            elif exchange == EXT_EXCHANGE_CZCE :
                 tick_data[EXT_Bar_DateTime] = pd.to_datetime(tradeDate+' '+tick_data[EXT_Bar_Time])
             else:
                 raise NameError(exchange)
@@ -157,7 +164,10 @@ class HisFutureTick(object):
         bar1min_fmt[EXT_Bar_High]             = bar1min_fmt[EXT_Bar_High].fillna(value=bar1min_fmt[EXT_Bar_Close])
         bar1min_fmt[EXT_Bar_Low]              = bar1min_fmt[EXT_Bar_Low].fillna(value=bar1min_fmt[EXT_Bar_Close])
         #add ticker column
-        bar1min_fmt[EXT_Bar_Ticker]           = ticker
+        if tickerSim in EXT_CZCE_ALL:
+            bar1min_fmt[EXT_Bar_Ticker]       = tickerSim+'1'+ticker[-3:]
+        else:
+            bar1min_fmt[EXT_Bar_Ticker]       = ticker
         return bar1min_fmt
     #----------------------------------------------------------------------
     def getResampleBar(self, bardata1m, tradetime,tradeDate, freq='5T'):
@@ -200,7 +210,7 @@ class HisFutureTick(object):
     #----------------------------------------------------------------------
     def getTradeTimeRange(self, tickerSim, type_l=['AM', 'PM', 'EV']):
         '''  get the trading data of tickerSim  '''
-        ticker1 = EXT_DCE_ALL
+        ticker1 = EXT_DCE_ALL+EXT_SHFE_ALL+EXT_CZCE_ALL
         ticker2 = [EXT_CFE_TF, EXT_CFE_T]
         ticker3 = [EXT_CFE_IF, EXT_CFE_IC,EXT_CFE_IH]
 
@@ -352,3 +362,8 @@ class HisFutureTick(object):
     def unrar(self, rar_file, dir_name):      # rarfile需要unrar支持, linux下pip install unrar, windows下在winrar文件夹找到unrar,加到path里
         rarobj = rarfile.RarFile(rar_file.decode('utf-8'))
         rarobj.extractall(dir_name.decode('utf-8'))
+if __name__ == '__main__':
+    a = HisFutureTick('E:\\work\\data_hft',EXT_Hdf_Path,'CZCE')
+    a.packedTick2Bar(path_packedtick = 'CZCE')
+    #a = HisFutureTick('E:\\work\\data_hft',EXT_Hdf_Path,'CFE')
+    #a.packedTick2Bar()

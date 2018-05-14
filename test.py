@@ -8,8 +8,8 @@ a = HisDayData()
 a.getData(is_save_stitch=True)
 
 # 从本地获取高频原始数据写入HDF
-a = HisFutureTick(EXT_Data_Path,EXT_Hdf_Path,'CFE')
-a.packedTick2Bar()
+a = HisFutureTick(EXT_Data_Path,EXT_Hdf_Path,'CZCE')
+a.packedTick2Bar(path_packedtick='CZCE')
 
 # HDF读
 hdf=HdfUtility()

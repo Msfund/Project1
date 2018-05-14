@@ -99,10 +99,16 @@ EXT_CZCE_ZC = 'ZC'
 EXT_CZCE_JR = 'JR'
 EXT_CZCE_SF = 'SF'
 EXT_CZCE_SM = 'SM'
+EXT_CZCE_ER = 'ER'
+EXT_CZCE_ME = 'ME'
+EXT_CZCE_RO = 'RO'
+EXT_CZCE_WS = 'WS'
+
 EXT_CZCE_ALL = [EXT_CZCE_PM,EXT_CZCE_WH,EXT_CZCE_CF,EXT_CZCE_SR,EXT_CZCE_OI,\
                 EXT_CZCE_TA,EXT_CZCE_RI,EXT_CZCE_LR,EXT_CZCE_MA,EXT_CZCE_FG,\
                 EXT_CZCE_RS,EXT_CZCE_RM,EXT_CZCE_TC,EXT_CZCE_ZC,EXT_CZCE_JR,\
-                EXT_CZCE_SF,EXT_CZCE_SM]
+                EXT_CZCE_SF,EXT_CZCE_SM,EXT_CZCE_ER,EXT_CZCE_ME,EXT_CZCE_RO,\
+                EXT_CZCE_WS]
 
 # Wind filename
 EXT_CFE_STOCK_FILE = 'filesync.CIndexFuturesEODPrices'
@@ -147,6 +153,7 @@ EXT_Bar_Low = 'Low'
 EXT_Bar_Volume = 'Volume'
 EXT_Bar_OpenInterest = 'OpenInterest'
 EXT_Bar_Turnover = 'Turnover'
+EXT_Bar_LastTurnover = 'LastTurnover'
 EXT_Bar_PreSettle = 'PreSettle'
 EXT_Bar_Settle = 'Settle'
 EXT_Bar_UpLimit = 'UpLimit'
