@@ -14,6 +14,7 @@ EXT_Info_TickerSim = 'tickerSim'
 EXT_Info_TradeDate = 'tradeDate'
 EXT_Info_SeriesNum = 'seriesNum'
 
+# code for HDF structure
 EXT_Rawdata = 'Rawdata'
 EXT_Stitch = 'Stitch'
 EXT_Indicator = 'Indicator'
@@ -57,7 +58,9 @@ EXT_SHFE_BU = 'BU'
 EXT_SHFE_HC = 'HC'
 EXT_SHFE_NI = 'NI'
 EXT_SHFE_SN = 'SN'
-EXT_SHFE_ALL = [EXT_SHFE_CU,EXT_SHFE_AL,EXT_SHFE_ZN,EXT_SHFE_RU,EXT_SHFE_AU,EXT_SHFE_AG,EXT_SHFE_RB,EXT_SHFE_WR,EXT_SHFE_PB,EXT_SHFE_BU,EXT_SHFE_HC,EXT_SHFE_NI,EXT_SHFE_SN] #'FU'
+EXT_SHFE_ALL = [EXT_SHFE_CU,EXT_SHFE_AL,EXT_SHFE_ZN,EXT_SHFE_RU,EXT_SHFE_AU,\
+                EXT_SHFE_AG,EXT_SHFE_RB,EXT_SHFE_WR,EXT_SHFE_PB,EXT_SHFE_BU,\
+                EXT_SHFE_HC,EXT_SHFE_NI,EXT_SHFE_SN] #'FU'
 # code for Commodity/finance Future in DCE
 EXT_DCE_A = 'A'
 EXT_DCE_B = 'B'
@@ -75,7 +78,9 @@ EXT_DCE_FB = 'FB'
 EXT_DCE_BB = 'BB'
 EXT_DCE_PP = 'PP'
 EXT_DCE_CS = 'CS'
-EXT_DCE_ALL = [EXT_DCE_A,EXT_DCE_B,EXT_DCE_M,EXT_DCE_C,EXT_DCE_Y,EXT_DCE_P,EXT_DCE_L,EXT_DCE_V,EXT_DCE_J,EXT_DCE_I,EXT_DCE_JM,EXT_DCE_JD,EXT_DCE_FB,EXT_DCE_BB,EXT_DCE_PP,EXT_DCE_CS]
+EXT_DCE_ALL = [EXT_DCE_A,EXT_DCE_B,EXT_DCE_M,EXT_DCE_C,EXT_DCE_Y,EXT_DCE_P,\
+               EXT_DCE_L,EXT_DCE_V,EXT_DCE_J,EXT_DCE_I,EXT_DCE_JM,EXT_DCE_JD,\
+               EXT_DCE_FB,EXT_DCE_BB,EXT_DCE_PP,EXT_DCE_CS]
 # code for Commodity/finance Future in CZCE
 EXT_CZCE_PM = 'PM'
 EXT_CZCE_WH = 'WH'
@@ -94,7 +99,10 @@ EXT_CZCE_ZC = 'ZC'
 EXT_CZCE_JR = 'JR'
 EXT_CZCE_SF = 'SF'
 EXT_CZCE_SM = 'SM'
-EXT_CZCE_ALL = [EXT_CZCE_PM,EXT_CZCE_WH,EXT_CZCE_CF,EXT_CZCE_SR,EXT_CZCE_OI,EXT_CZCE_TA,EXT_CZCE_RI,EXT_CZCE_LR,EXT_CZCE_MA,EXT_CZCE_FG,EXT_CZCE_RS,EXT_CZCE_RM,EXT_CZCE_TC,EXT_CZCE_ZC,EXT_CZCE_JR,EXT_CZCE_SF,EXT_CZCE_SM]
+EXT_CZCE_ALL = [EXT_CZCE_PM,EXT_CZCE_WH,EXT_CZCE_CF,EXT_CZCE_SR,EXT_CZCE_OI,\
+                EXT_CZCE_TA,EXT_CZCE_RI,EXT_CZCE_LR,EXT_CZCE_MA,EXT_CZCE_FG,\
+                EXT_CZCE_RS,EXT_CZCE_RM,EXT_CZCE_TC,EXT_CZCE_ZC,EXT_CZCE_JR,\
+                EXT_CZCE_SF,EXT_CZCE_SM]
 
 # Wind filename
 EXT_CFE_STOCK_FILE = 'filesync.CIndexFuturesEODPrices'
@@ -145,13 +153,17 @@ EXT_Bar_UpLimit = 'UpLimit'
 EXT_DownLimit = 'DownLimit'
 EXT_AdjFactor = 'AdjFactor'
 
+# Header for trade data from Wind
 EXT_In_Header = 'trade_dt,s_info_windcode,s_dq_presettle,s_dq_open,s_dq_high,s_dq_low,s_dq_close,s_dq_settle,s_dq_volume,s_dq_oi'
+# Header for delistdate data from Wind
 EXT_In_Header2 = 's_info_windcode,s_info_delistdate'
 EXT_In_Date = 'trade_dt'
 EXT_In_Asset = 's_info_windcode'
 EXT_In_Delistdate = 's_info_delistdate'
 
+# Header to save trade data
 EXT_Out_Header = 'Date,Asset,PreSettle,Open,High,Low,Close,Settle,Volume,OpenInterest'
+# Header to save delistdate data
 EXT_Out_Header2 = 'Asset,Delistdate'
 EXT_Out_Date = 'Date'
 EXT_Out_Asset = 'Asset'
