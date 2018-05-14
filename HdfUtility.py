@@ -103,7 +103,7 @@ class HdfUtility:
                 store[key] = indata
             else:
                 adddata = indata[~indata.index.isin(store[key].index)]
-            if kind2 in [EXT_Series_00,EXT_Series_01]:
-                adddata[EXT_Out_AdjFactor] = adddata[EXT_Out_AdjFactor]*store[key][EXT_Out_AdjFactor].iloc[-1]/adddata[EXT_Out_AdjFactor].iloc[0]
-            store.append(key,adddata)
+                if kind2 in [EXT_Series_00,EXT_Series_01]:
+                    adddata[EXT_Out_AdjFactor] = adddata[EXT_Out_AdjFactor]*store[key][EXT_Out_AdjFactor].iloc[-1]/adddata[EXT_Out_AdjFactor].iloc[0]
+                store.append(key,adddata)
             store.close()

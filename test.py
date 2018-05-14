@@ -3,13 +3,14 @@ from HdfUtility import *
 from FutureTickData import *
 from HisDayData import *
 
+# 从万德获取日度交易数据写入HDF,计算StitchRule写入HDF，计算StitchData判断是否写入HDF
+a = HisDayData()
+a.getData(is_save_stitch=True)
 
 # 从本地获取高频原始数据写入HDF
 a = HisFutureTick(EXT_Data_Path,EXT_Hdf_Path,'DCE')
 a.packedTick2Bar(path_packedtick='DCE')
-# 从万德获取日度交易数据写入HDF,计算StitchRule写入HDF，计算StitchData判断是否写入HDF
-a = HisDayData()
-a.getData(is_save_stitch=True)
+
 # HDF读
 hdf=HdfUtility()
 # 读各个频率的Rawdata: kind1='Rawdata',kind2=None,kind3='1d'
