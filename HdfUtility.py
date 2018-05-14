@@ -44,11 +44,11 @@ class HdfUtility:
         # 读Indicator：       kind1='Indicator',kind2='Indicator_name',kind3=None
         store = HDFStore(path,mode = 'r')
         if kind1 == EXT_Rawdata:
-            key = kind1+'/'+excode+'/'+symbol+'/'+kind3
+            key = '/'.join([kind1,excode,symbol,kind3])
         elif kind1 == EXT_Stitch:
-            key = kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
+            key = '/'.join([kind1,excode,symbol,EXT_Rule,kind2]) if kind3 == None else '/'.join([kind1,excode,symbol,EXT_Period,kind3,kind2])
         elif kind1 == EXT_Indicator:
-            key = kind1+'/'+excode+'/'+symbol+kind2
+            key = '/'.join([kind1,excode,symbol,kind2])
         else:
             print("kind not supported")
             return
@@ -71,11 +71,11 @@ class HdfUtility:
         # 写Indicator：       kind1='Indicator',kind2='Indicator_name',kind3='params'
         store = HDFStore(path,mode='a')
         if kind1 == EXT_Rawdata:
-            key = kind1+'/'+excode+'/'+symbol+'/'+kind3
+            key = '/'.join([kind1,excode,symbol,kind3])
         elif kind1 == EXT_Stitch:
-            key = kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
+            key = '/'.join([kind1,excode,symbol,EXT_Rule,kind2]) if kind3 == None else '/'.join([kind1,excode,symbol,EXT_Period,kind3,kind2])
         elif kind1 == EXT_Indicator:
-            key = kind1+'/'+excode+'/'+symbol+kind2
+            key = '/'.join([kind1,excode,symbol,kind2])
         else:
             print("kind not supported")
             return

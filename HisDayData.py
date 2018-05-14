@@ -43,6 +43,14 @@ class HisDayData:
                         hdf.hdfWrite(EXT_Hdf_Path,excode,symbol[i],dom_data.set_index([EXT_Out_Date,EXT_Out_Asset]),EXT_Stitch,EXT_Series_00,EXT_Period_1d)
                         hdf.hdfWrite(EXT_Hdf_Path,excode,symbol[i],sub_data.set_index([EXT_Out_Date,EXT_Out_Asset]),EXT_Stitch,EXT_Series_01,EXT_Period_1d)
 
+    def changeCZCEcode(self,symbol,raw_data):
+        #raw_data是没有任何index，在使用前有可能需要reset_index()之后再进行处理
+        code_num = pd.Series([re.findall(r"\d*",raw_data[EXT_Out_Asset][i])[2] for i in range(len(raw_data[EXT_Out_Asset]))])
+        raw_len = pd.Series([len(code_num[i]) for i in range(len(code_num))])
+        raw_data[EXT_Out_Asset].ix[raw_len == 3] = symbol+'1'+code_num.ix[raw_len == 3]+'.CZC'
+        raw_data[EXT_Out_Asset].ix[raw_len == 4] = symbol+code_num.ix[raw_len == 4]+'.CZC'
+        return raw_data
+
     def getQuoteWind(self,excode,symbol,startdate=EXT_Start,enddate=EXT_End):
         if symbol in EXT_CFE_STOCK:
             exchmarkt = EXT_CFE_STOCK_FILE
@@ -71,10 +79,7 @@ class HisDayData:
             raw_data.columns = EXT_Out_Header.split(',')
             if symbol in EXT_CZCE_ALL:
                 #下面把所有郑州商品交易所原始数据三位数合约代码改为四位数
-                code_num = pd.Series([re.findall(r"\d*",raw_data[EXT_Out_Asset][i])[2] for i in range(len(raw_data[EXT_Out_Asset]))])
-                raw_len = pd.Series([len(code_num[i]) for i in range(len(code_num))])
-                raw_data[EXT_Out_Asset].ix[raw_len == 3] = symbol+'1'+code_num.ix[raw_len == 3]+'.CZC'
-                raw_data[EXT_Out_Asset].ix[raw_len == 4] = symbol+code_num.ix[raw_len == 4]+'.CZC'
+                raw_data = self.changeCZCEcode(symbol,raw_data)
             raw_data = raw_data.sort_values(by = [EXT_Out_Date,EXT_Out_Asset])
             #将日期转化
             raw_data[EXT_Out_Date] = pd.to_datetime(raw_data[EXT_Out_Date])
@@ -91,10 +96,7 @@ class HisDayData:
         delistdate.columns = EXT_Out_Header2.split(',')
         if symbol in EXT_CZCE_ALL:
             #下面把所有郑州商品交易所原始数据三位数合约代码改为四位数
-            code_num = pd.Series([re.findall(r"\d*",delistdate[EXT_In_Asset][i])[2] for i in range(len(delistdate[EXT_Out_Asset]))])
-            delist_len = pd.Series([len(code_num[i]) for i in range(len(code_num))])
-            delistdate[EXT_Out_Asset].ix[delist_len == 3] = symbol+'1'+code_num.ix[delist_len == 3]+'.CZC'
-            delistdate[EXT_Out_Asset].ix[delist_len == 4] = symbol+code_num.ix[delist_len == 4]+'.CZC'
+            delistdate = self.changeCZCEcode(symbol,delistdate)
         delistdate[EXT_Out_Delistdate] = pd.to_datetime(delistdate[EXT_Out_Delistdate])
         return delistdate
 
