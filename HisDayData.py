@@ -64,21 +64,21 @@ class HisDayData:
         self.cursor.execute(sql)
         raw_data = self.cursor.fetchall()
         raw_data = pd.DataFrame(raw_data)
-        try:
-            raw_data.columns = EXT_Out_Header.split(',')
-        except ValueError:
+        if raw_data.shape[0] == 0:
             print("No rawdata found")
             return
-        if symbol in EXT_CZCE_ALL:
-            #下面把所有郑州商品交易所原始数据三位数合约代码改为四位数
-            code_num = pd.Series([re.findall(r"\d*",raw_data[EXT_Out_Asset][i])[2] for i in range(len(raw_data[EXT_Out_Asset]))])
-            raw_len = pd.Series([len(code_num[i]) for i in range(len(code_num))])
-            raw_data[EXT_Out_Asset].ix[raw_len == 3] = symbol+'1'+code_num.ix[raw_len == 3]+'.CZC'
-            raw_data[EXT_Out_Asset].ix[raw_len == 4] = symbol+code_num.ix[raw_len == 4]+'.CZC'
-        raw_data = raw_data.sort_values(by = [EXT_Out_Date,EXT_Out_Asset])
-        #将日期转化
-        raw_data[EXT_Out_Date] = pd.to_datetime(raw_data[EXT_Out_Date])
-        return raw_data
+        else:
+            raw_data.columns = EXT_Out_Header.split(',')
+            if symbol in EXT_CZCE_ALL:
+                #下面把所有郑州商品交易所原始数据三位数合约代码改为四位数
+                code_num = pd.Series([re.findall(r"\d*",raw_data[EXT_Out_Asset][i])[2] for i in range(len(raw_data[EXT_Out_Asset]))])
+                raw_len = pd.Series([len(code_num[i]) for i in range(len(code_num))])
+                raw_data[EXT_Out_Asset].ix[raw_len == 3] = symbol+'1'+code_num.ix[raw_len == 3]+'.CZC'
+                raw_data[EXT_Out_Asset].ix[raw_len == 4] = symbol+code_num.ix[raw_len == 4]+'.CZC'
+            raw_data = raw_data.sort_values(by = [EXT_Out_Date,EXT_Out_Asset])
+            #将日期转化
+            raw_data[EXT_Out_Date] = pd.to_datetime(raw_data[EXT_Out_Date])
+            return raw_data
 
     def futureDelistdate(self,symbol,startdate):
         # 获取合约退市日期
