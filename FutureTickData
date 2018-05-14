@@ -62,7 +62,7 @@ class HisFutureTick(object):
                 #-------------------------------------
                 # new part
                 tradetime = ['AM', 'PM']
-                #get info        
+                #get info
                 tickerSim = symbol
                 tradeDate = row[EXT_Info_TradeDate]
                 timeRange = self.getTradeTimeRange(tickerSim, type_l=tradetime)
@@ -100,7 +100,7 @@ class HisFutureTick(object):
         tick_rawdata = pd.read_table(filename_tick,sep =',')
         colnames = ",".join(tick_rawdata.columns)
         colnames = colnames.replace(' ', '')
-        header_dict = EXT_TickFileHeaderMap_Dict[colnames]
+        header_dict = EXT_TickFileHeaderMap_Dict[colnames] #这里原来是EXT_TickFileHeaderMap_Dict[colnames]
         #TODO: add the evening trading in future
         timeRange = self.getTradeTimeRange(tickerSim, type_l=tradetime)
 
@@ -123,7 +123,9 @@ class HisFutureTick(object):
             if exchange == EXT_EXCHANGE_CFE :
                 tick_data[EXT_Bar_DateTime] = pd.to_datetime(tradeDate+' '+ tick_data[EXT_Bar_Time])
             elif exchange == EXT_EXCHANGE_DCE :
-                tick_data[EXT_Bar_DateTime] = pd.to_datetime(tick_data[EXT_Bar_Date]+' '+tick_data[EXT_Bar_Time])
+                tick_data[EXT_Bar_DateTime] = pd.to_datetime(tradeDate+' '+tick_data[EXT_Bar_Time])
+            elif exchange == EXT_EXCHANGE_CZCE:
+                tick_data[EXT_Bar_DateTime] = pd.to_datetime(tradeDate+' '+tick_data[EXT_Bar_Time])
             else:
                 raise NameError(exchange)
             tick_data = tick_data.drop_duplicates(EXT_Bar_DateTime,keep = 'first')
@@ -133,11 +135,15 @@ class HisFutureTick(object):
 
             #clear the data
             tick_data.loc[tick_data[EXT_Bar_Volume]<0, EXT_Bar_Volume] = 0
-            tick_data.loc[tick_data[EXT_Bar_Turnover]<0, EXT_Bar_Turnover] = 0
+            if exchange != EXT_EXCHANGE_CZCE:
+                tick_data.loc[tick_data[EXT_Bar_Turnover]<0, EXT_Bar_Turnover] = 0
             tick_data.loc[tick_data[EXT_Bar_OpenInterest]<0, EXT_Bar_OpenInterest] = 0
 
             ## get the 1min Bar data
-            bar1min_raw = tick_data.resample(rule='T', label ='right', closed ='right').agg(EXT_Bar_Rule)
+            if exchange != EXT_EXCHANGE_CZCE:
+                bar1min_raw = tick_data.resample(rule='T', label ='right', closed ='right').agg(EXT_Bar_Rule)
+            else:
+                bar1min_raw = tick_data.resample(rule='T', label ='right', closed ='right').agg(EXT_Bar_Rule1)
 
 
             time1m = self.getTradeTime(dateStr=tradeDate, tradetimeRange=timeRange, freq='T')
@@ -150,7 +156,8 @@ class HisFutureTick(object):
 
         #fill up the NaNs vaule with pre-value or 0
         bar1min_fmt[EXT_Bar_Volume]           = bar1min_fmt[EXT_Bar_Volume].fillna(value=0)
-        bar1min_fmt[EXT_Bar_Turnover]         = bar1min_fmt[EXT_Bar_Turnover].fillna(value=0)
+        if exchange != EXT_EXCHANGE_CZCE:
+            bar1min_fmt[EXT_Bar_Turnover]         = bar1min_fmt[EXT_Bar_Turnover].fillna(value=0)
         bar1min_fmt[EXT_Bar_Close]            = bar1min_fmt[EXT_Bar_Close].fillna(method='ffill')
         bar1min_fmt[EXT_Bar_OpenInterest]     = bar1min_fmt[EXT_Bar_OpenInterest].fillna(method='ffill')
         bar1min_fmt[EXT_Bar_Open]             = bar1min_fmt[EXT_Bar_Open].fillna(value=bar1min_fmt[EXT_Bar_Close])
@@ -166,16 +173,25 @@ class HisFutureTick(object):
         if freq=='H':
             bar_data = bardata1m.copy()
             if bar_data.index.size < 6:
-                bar_data = bar_data.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule)
-            else: 
+                if bardata1m.shape[1] > 7:
+                    bar_data = bar_data.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule)
+                else:
+                    bar_data = bar_data.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule1)
+            else:
                 bar_data['label'] = np.NaN
                 bar_data['label'].ix[time_freqm] = [i for i in range(len(time_freqm))]
                 bar_data['label'] = bar_data['label'].fillna(method = 'bfill')
-                bar_data = bar_data.groupby('label').agg(EXT_Bar_Rule)
+                if bar_data.shape[1] > 8:
+                    bar_data = bar_data.groupby('label').agg(EXT_Bar_Rule)
+                else:
+                    bar_data = bar_data.groupby('label').agg(EXT_Bar_Rule1)
                 bar_data.index =  time_freqm
             bar_data_fmt = bar_data.copy()
-        else:        
-            bar_data = bardata1m.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule)
+        else:
+            if bardata1m.shape[1] > 7:
+                bar_data = bardata1m.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule)
+            else:
+                bar_data = bardata1m.resample(rule=freq, label ='right', closed ='right').agg(EXT_Bar_Rule1)
             bar_data_fmt = bar_data.ix[time_freqm]
         bar_data_fmt = bar_data_fmt.dropna(axis=0, how = 'all')
         return bar_data_fmt
@@ -200,7 +216,7 @@ class HisFutureTick(object):
     #----------------------------------------------------------------------
     def getTradeTimeRange(self, tickerSim, type_l=['AM', 'PM', 'EV']):
         '''  get the trading data of tickerSim  '''
-        ticker1 = []
+        ticker1 = EXT_DCE_ALL+EXT_SHFE_ALL+EXT_CZCE_ALL
         ticker2 = [EXT_CFE_TF, EXT_CFE_T]
         ticker3 = [EXT_CFE_IF, EXT_CFE_IC,EXT_CFE_IH]
 
@@ -352,7 +368,8 @@ class HisFutureTick(object):
     def unrar(self, rar_file, dir_name):      # rarfile需要unrar支持, linux下pip install unrar, windows下在winrar文件夹找到unrar,加到path里
         rarobj = rarfile.RarFile(rar_file.decode('utf-8'))
         rarobj.extractall(dir_name.decode('utf-8'))
-
 if __name__ == '__main__':
-    a = HisFutureTick('E:\\work\\data_hft',EXT_Path,'CFE')
-    a.packedTick2Bar()
+    a = HisFutureTick('E:\\work\\data_hft',EXT_Hdf_Path,'CZCE')
+    a.packedTick2Bar(path_packedtick = 'CZCE')
+    #a = HisFutureTick('E:\\work\\data_hft',EXT_Hdf_Path,'CFE')
+    #a.packedTick2Bar()
