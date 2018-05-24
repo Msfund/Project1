@@ -3,6 +3,19 @@ from HdfUtility import *
 from FutureTickData import *
 from HisDayData import *
 
+startdate='20110101'
+enddate='20171231'
+db = cx_Oracle.connect(EXT_Wind_User,EXT_Wind_Password,EXT_Wind_Link)
+cursor = db.cursor()
+sql = ''' select '''+EXT_In_Header+''' from filesync.CCommodityFuturesEODPrices
+where '''+EXT_In_Date+''' >= '''+startdate+''' and '''+EXT_In_Date+''' <= '''+enddate+'''
+order by trade_dt'''
+cursor.execute(sql)
+raw_data = cursor.fetchall()
+raw_data = pd.DataFrame(raw_data)
+raw_data.columns = EXT_Out_Header.split(',')
+raw_data = raw_data.sort_values(by = [EXT_Out_Asset,EXT_Out_Date])
+raw_data.to_csv('F:\\cta_data.csv')
 # 从万德获取日度交易数据写入HDF,计算StitchRule写入HDF，计算StitchData判断是否写入HDF
 a = HisDayData()
 a.getData(is_save_stitch=True)
