@@ -28,6 +28,9 @@ HDF
                   /60m
                   /1d
     /Indicator
+        /CFE
+            /IF
+                /Indicator_name
 '''
 class HdfUtility:
 
