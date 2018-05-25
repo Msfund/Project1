@@ -12,12 +12,17 @@ hdf = HdfUtility()
 data = hdf.hdfRead(EXT_Hdf_Path,'CFE','IC','Stitch','00','1d',startdate='20110101',enddate='20171231')
 
 # 因子的参数文件
-indparams = dict([('ma',dict([('period',[5,10,20])]))])
+indparams = dict([('ma',dict([('period',[5,10,20])])),('rsi',dict([('period',[5,10,20])]))])
 
 def ma_ind(data):
     for i in indparams['ma']['period']:
         data['ma'+str(i)] = talib.MA(data[EXT_Bar_Close]*data[EXT_AdjFactor].values,timeperiod=i)
     indname = ["'ma"+str(i)+"'," for i in indparams['ma']['period']]
+    return eval("data[["+''.join(indname)+"]]")
+def rsi_ind(data):
+    for i in indparams['rsi']['period']:
+        data['rsi'+str(i)] = talib.RSI(data[EXT_Bar_Close]*data[EXT_AdjFactor].values,timeperiod=i)
+    indname = ["'rsi"+str(i)+"'," for i in indparams['rsi']['period']]
     return eval("data[["+''.join(indname)+"]]")
 
 def Ind_Stability(data,mode='prod'):
@@ -79,7 +84,7 @@ def Ind_Eff(data,mode = 'prod'):
 
 if __name__ == '__main__':  
     # 计算因子
-    df = ma_ind(data)
+    df = rsi_ind(data)
     df['ret'] = ffn.to_returns(data['Close'])
     # 平稳性检验，有效性检验
     Ind_Stability(df)
