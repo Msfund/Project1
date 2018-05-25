@@ -7,7 +7,9 @@ import json
 from HdfUtility import HdfUtility
 from dataUlt import *
 from statsmodels.tsa.stattools import adfuller
+from matplotlib.backends.backend_pdf import PdfPages
 
+result_path = 'C:\\Users\\user\\GitHub\\Project1\\Test_Results'
 # 读入数据
 hdf = HdfUtility()
 data = hdf.hdfRead(EXT_Hdf_Path,'CFE','IC','Stitch','00','1d',startdate='20110101',enddate='20171231')
@@ -20,12 +22,12 @@ def ma_ind(data):
     for i in indparams['ma']['period']:
         data['ma'+str(i)] = talib.MA(data[EXT_Bar_Close]*data[EXT_AdjFactor].values,timeperiod=i)
     indname = ["'ma"+str(i)+"'," for i in indparams['ma']['period']]
-    return eval("data[["+''.join(indname)+"]]")
+    return eval("data[['ret',"+''.join(indname)+"]]")
 def rsi_ind(data):
     for i in indparams['rsi']['period']:
         data['rsi'+str(i)] = talib.RSI(data[EXT_Bar_Close]*data[EXT_AdjFactor].values,timeperiod=i)
     indname = ["'rsi"+str(i)+"'," for i in indparams['rsi']['period']]
-    return eval("data[["+''.join(indname)+"]]")
+    return eval("data[['ret',"+''.join(indname)+"]]")
 
 def Ind_Stability(data,excode,Asset):
     '''
@@ -52,7 +54,7 @@ def Ind_Stability(data,excode,Asset):
                 dfoutput['Critical Value (%s)' %key] = value
             dfoutput['icbest'] = dftest[5]
             dfOutputAll[i] = dfoutput
-    dfOutputAll.to_csv(excode+'_'+Asset+'StabilityTest.csv')
+    dfOutputAll.to_csv(result_path+'\\'+excode+'_'+Asset+'_StabilityTest.csv')
     return dfOutputAll
 
 def Ind_Eff(data,excode,Asset,mode = 'prod'):
@@ -101,7 +103,7 @@ def Ind_Eff(data,excode,Asset,mode = 'prod'):
             ax.set_ylabel(i,fontsize = 10)
     plt.suptitle(Asset+'  Plot',fontsize=16,x=0.52,y=1.03)#储存入pdf后不能正常显示
     f.tight_layout()
-    with PdfPages(excode+'_'+Asset+'_Plot.pdf') as pdf:
+    with PdfPages(result_path+'\\'+excode+'_'+Asset+'_Plot.pdf') as pdf:
         pdf.savefig()
         plt.close()
     return
@@ -116,8 +118,8 @@ if __name__ =='__main__':
             print(symbol[i])
             df = hdf.hdfRead(EXT_Hdf_Path,excode,symbol[i],'Stitch','00','1d',startdate = '20120101',enddate = '20171231')
             df[EXT_Bar_Close] = df[EXT_Bar_Close] * df[EXT_AdjFactor]
+            df['ret'] = ffn.to_returns(df[EXT_Bar_Close])
             mode = 'prod'
-            df = rsi_ind(df)
-            df['ret'] = ffn.to_returns(data[EXT_Bar_Close])
+            df = ma_ind(df)
             dfOutputAll = Ind_Stability(df,excode,symbol[i])
             Ind_Eff(data = df,excode = excode,Asset = symbol[i])
