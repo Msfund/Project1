@@ -9,25 +9,21 @@ from statsmodels.tsa.stattools import adfuller
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-import matplotlib.pyplot as plt
 import talib
-#import ffn
+import ffn
 from HdfUtility import HdfUtility
+from matplotlib.backends.backend_pdf import PdfPages
 #from Indicator_setting import *
 
 MA = {}
-MA['period'] = [2,3,5,7]
+MA['period'] = [20,30,50,70]
 path = 'E:\\work\\vnpy-1.7\\getdata3\\out2.hdf5'
 hdf = HdfUtility()
-data = hdf.hdfRead(path,'CFE','IC','Stitch','00','1d',startdate = '20120101',enddate = '20171231')
-data[EXT_Bar_Close] = data[EXT_Bar_Close] * data[EXT_AdjFactor]
-mode = 'prod'
 def ma_ind(data):
     for i in MA['period']:
         data['ma'+str(i)] = talib.MA(data['Close'].values, timeperiod = i)
     indname = ["'ma"+str(i)+"'," for i in MA['period']]
-    data['ret'] = (data[EXT_Bar_Close]-data[EXT_Bar_Close].shift(1))/data[EXT_Bar_Close].shift(1)
+    data['ret'] = ffn.to_returns(data[EXT_Bar_Close])
     return eval("data[["+''.join("'ret',")+''.join(indname)+"]]")
 # =============================================================================
 #def Ind_Std(self,data):
@@ -36,7 +32,7 @@ def ma_ind(data):
 #     data[self.Ind_name] = (data[self.Ind_name]-mean)/std
 #     return data
 # =============================================================================
-def Ind_Stability(data):
+def Ind_Stability(data,excode,Asset):
     '''
     Unit Root Test
     The null hypothesis of the Augmented Dickey-Fuller is that there is a unit
@@ -46,7 +42,7 @@ def Ind_Stability(data):
     ts只能输入一列
     输出值有 t统计量 p值 滞后阶数 观测值数量 1% 5% 10%分位点数 icbest
     '''
-    dfOutputAll = {}
+    dfOutputAll = pd.DataFrame([])
     temp = data.reset_index().dropna()
     if mode =='prod':
         temp['ret'] = (1+temp['ret']).cumprod()
@@ -61,8 +57,9 @@ def Ind_Stability(data):
                 dfoutput['Critical Value (%s)' %key] = value
             dfoutput['icbest'] = dftest[5]
             dfOutputAll[i] = dfoutput
+    dfOutputAll.to_csv(excode+'_'+Asset+'StabilityTest.csv')
     return dfOutputAll
-def Ind_Eff(data,mode = 'prod'):
+def Ind_Eff(data,excode,Asset,mode = 'prod'):
     #mode为'sum'时累积收益率为累加
     #mode为'prod'时累积收益率为1+收益率的累乘
     #TimeSeries结构为：MultiIndex为时间和资产；有两列数据 ret 和对应的Ind
@@ -71,7 +68,7 @@ def Ind_Eff(data,mode = 'prod'):
         temp['ret'] = (1+temp['ret']).cumprod()
     if mode =='sum':
         temp['ret'] = (temp['ret']).cumsum()
-    figsize = 9,12
+    figsize = 10,15
     f = plt.figure(dpi = 100,figsize = figsize)
     k = (len(data.columns)-1) #排除收益率这一列，还有k个Indicator
     j = 0
@@ -106,12 +103,24 @@ def Ind_Eff(data,mode = 'prod'):
             for xl in xlabels:
                 xl.set_rotation(30) #把x轴上的label旋转15度,以免太密集时有重叠
             ax.set_ylabel(i,fontsize = 10)
+    plt.suptitle(Asset+'  Plot',fontsize=16,x=0.52,y=1.03)#储存入pdf后不能正常显示
     f.tight_layout()
-    with PdfPages('multipage_pdf.pdf') as pdf:
+    with PdfPages(excode+'_'+Asset+'_Plot.pdf') as pdf:
         pdf.savefig()
         plt.close()
     return 
 if __name__ =='__main__':
-    data = ma_ind(data)
-    dfOutputAll = Ind_Stability(data)
-    Ind_Eff(data)
+    asset_list = {}
+    asset_list[EXT_EXCHANGE_CFE] = EXT_CFE_ALL
+    asset_list[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
+    asset_list[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
+    # asset_list[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
+    for excode,symbol in asset_list.items():
+        for i in range(len(symbol)):
+            print(symbol[i])
+            df = hdf.hdfRead(path,excode,symbol[i],'Stitch','00','1d',startdate = '20120101',enddate = '20171231')
+            df[EXT_Bar_Close] = df[EXT_Bar_Close] * df[EXT_AdjFactor]
+            mode = 'prod'
+            df = ma_ind(df)
+            dfOutputAll = Ind_Stability(df,excode,symbol[i])
+            Ind_Eff(data = df,excode = excode,Asset = symbol[i])
