@@ -9,6 +9,7 @@ from dataUlt import *
 from statsmodels.tsa.stattools import adfuller
 from matplotlib.backends.backend_pdf import PdfPages
 
+# 需要先手动创建结果输出的路径
 result_path = 'C:\\Users\\user\\GitHub\\Project1\\Test_Results'
 # 读入数据
 hdf = HdfUtility()
