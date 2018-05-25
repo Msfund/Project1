@@ -27,7 +27,7 @@ def rsi_ind(data):
     indname = ["'rsi"+str(i)+"'," for i in indparams['rsi']['period']]
     return eval("data[["+''.join(indname)+"]]")
 
-def Ind_Stability(data,mode='prod'):
+def Ind_Stability(data,excode,Asset):
     '''
     Unit Root Test
     The null hypothesis of the Augmented Dickey-Fuller is that there is a unit
@@ -37,7 +37,7 @@ def Ind_Stability(data,mode='prod'):
     ts只能输入一列
     输出值有 t统计量 p值 滞后阶数 观测值数量 1% 5% 10%分位点数 icbest
     '''
-    dfOutputAll = {}
+    dfOutputAll = pd.DataFrame([])
     temp = data.reset_index().dropna()
     if mode =='prod':
         temp['ret'] = (1+temp['ret']).cumprod()
@@ -52,8 +52,10 @@ def Ind_Stability(data,mode='prod'):
                 dfoutput['Critical Value (%s)' %key] = value
             dfoutput['icbest'] = dftest[5]
             dfOutputAll[i] = dfoutput
+    dfOutputAll.to_csv(excode+'_'+Asset+'StabilityTest.csv')
     return dfOutputAll
-def Ind_Eff(data,mode = 'prod'):
+
+def Ind_Eff(data,excode,Asset,mode = 'prod'):
     #mode为'sum'时累积收益率为累加
     #mode为'prod'时累积收益率为1+收益率的累乘
     #TimeSeries结构为：MultiIndex为时间和资产；有两列数据 ret 和对应的Ind
@@ -62,7 +64,8 @@ def Ind_Eff(data,mode = 'prod'):
         temp['ret'] = (1+temp['ret']).cumprod()
     if mode =='sum':
         temp['ret'] = (temp['ret']).cumsum()
-    plt.figure()
+    figsize = 10,15
+    f = plt.figure(dpi = 100,figsize = figsize)
     k = (len(data.columns)-1) #排除收益率这一列，还有k个Indicator
     j = 0
     for i in data.columns:
@@ -72,22 +75,49 @@ def Ind_Eff(data,mode = 'prod'):
             df = TimeSeries[[i,'ret']].set_index([i])
             ##因子排序和收益率的
             j = j+1
-            plt.subplot(k,2,j)
-            plt.plot(df)
+            ax = plt.subplot(k,2,j)
+            ax.plot(df)
+            ax.set_xlabel(i,fontsize = 10)
+            ax.tick_params(labelsize=8)
+            ax.set_title('Cumulative return orderd by Ind_'+i)
+            xlabels = ax.get_xticklabels()
+            #ax.suptitle()
+            for xl in xlabels:
+                xl.set_rotation(30) #把x轴上的label旋转15度,以免太密集时有重叠
+            ax.set_ylabel('cum_ret',fontsize = 10)
             #现在只画前两个图
             ##因子的时间序列
             ts = TimeSeries[[i,EXT_Bar_Date]]
             ts = ts.sort_values(by = EXT_Bar_Date).set_index([EXT_Bar_Date])
             j = j+1
-            plt.subplot(k,2,j)
-            plt.plot(ts)
-    plt.show()
+            ax = plt.subplot(k,2,j)
+            ax.plot(ts)
+            ax.set_xlabel('Date',fontsize = 10)
+            ax.tick_params(labelsize=8)
+            ax.set_title('TimeSeries of Ind_'+i)
+            xlabels = ax.get_xticklabels()
+            for xl in xlabels:
+                xl.set_rotation(30) #把x轴上的label旋转15度,以免太密集时有重叠
+            ax.set_ylabel(i,fontsize = 10)
+    plt.suptitle(Asset+'  Plot',fontsize=16,x=0.52,y=1.03)#储存入pdf后不能正常显示
+    f.tight_layout()
+    with PdfPages(excode+'_'+Asset+'_Plot.pdf') as pdf:
+        pdf.savefig()
+        plt.close()
     return
-
-if __name__ == '__main__':
-    # 计算因子
-    df = rsi_ind(data)
-    df['ret'] = ffn.to_returns(data['Close'])
-    # 平稳性检验，有效性检验
-    Ind_Stability(df)
-    Ind_Eff(df)
+if __name__ =='__main__':
+    asset_list = {}
+    asset_list[EXT_EXCHANGE_CFE] = EXT_CFE_ALL
+    asset_list[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
+    asset_list[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
+    # asset_list[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
+    for excode,symbol in asset_list.items():
+        for i in range(len(symbol)):
+            print(symbol[i])
+            df = hdf.hdfRead(EXT_Hdf_Path,excode,symbol[i],'Stitch','00','1d',startdate = '20120101',enddate = '20171231')
+            df[EXT_Bar_Close] = df[EXT_Bar_Close] * df[EXT_AdjFactor]
+            mode = 'prod'
+            df = rsi_ind(df)
+            df['ret'] = ffn.to_returns(data[EXT_Bar_Close])
+            dfOutputAll = Ind_Stability(df,excode,symbol[i])
+            Ind_Eff(data = df,excode = excode,Asset = symbol[i])
