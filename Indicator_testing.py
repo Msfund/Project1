@@ -123,4 +123,5 @@ if __name__ =='__main__':
             mode = 'prod'
             df = ma_ind(df)
             dfOutputAll = Ind_Stability(df,excode,symbol[i])
+            df['ret']=df['ret'].shift(-1)
             Ind_Eff(data = df,excode = excode,Asset = symbol[i])
