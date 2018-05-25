@@ -71,7 +71,8 @@ def Ind_Eff(data,mode = 'prod'):
         temp['ret'] = (1+temp['ret']).cumprod()
     if mode =='sum':
         temp['ret'] = (temp['ret']).cumsum()
-    plt.figure()
+    figsize = 9,12
+    f = plt.figure(dpi = 100,figsize = figsize)
     k = (len(data.columns)-1) #排除收益率这一列，还有k个Indicator
     j = 0
     for i in data.columns:
@@ -81,18 +82,36 @@ def Ind_Eff(data,mode = 'prod'):
             df = TimeSeries[[i,'ret']].set_index([i])
             ##因子排序和收益率的
             j = j+1
-            plt.subplot(k,2,j)
-            plt.plot(df)
+            ax = plt.subplot(k,2,j)
+            ax.plot(df)
+            ax.set_xlabel(i,fontsize = 10)
+            ax.tick_params(labelsize=8) 
+            ax.set_title('Cumulative return orderd by Ind_'+i)
+            xlabels = ax.get_xticklabels()
+            #ax.suptitle()
+            for xl in xlabels:
+                xl.set_rotation(30) #把x轴上的label旋转15度,以免太密集时有重叠
+            ax.set_ylabel('cum_ret',fontsize = 10)
             #现在只画前两个图
             ##因子的时间序列
             ts = TimeSeries[[i,EXT_Bar_Date]]
             ts = ts.sort_values(by = EXT_Bar_Date).set_index([EXT_Bar_Date])
             j = j+1
-            plt.subplot(k,2,j)
-            plt.plot(ts)
-    plt.show()
-    return
-########################################
-data = ma_ind(data)
-dfOutputAll = Ind_Stability(data)
-Ind_Eff(data)
+            ax = plt.subplot(k,2,j)
+            ax.plot(ts)
+            ax.set_xlabel('Date',fontsize = 10)
+            ax.tick_params(labelsize=8)
+            ax.set_title('TimeSeries of Ind_'+i)
+            xlabels = ax.get_xticklabels()
+            for xl in xlabels:
+                xl.set_rotation(30) #把x轴上的label旋转15度,以免太密集时有重叠
+            ax.set_ylabel(i,fontsize = 10)
+    f.tight_layout()
+    with PdfPages('multipage_pdf.pdf') as pdf:
+        pdf.savefig()
+        plt.close()
+    return 
+if __name__ =='__main__':
+    data = ma_ind(data)
+    dfOutputAll = Ind_Stability(data)
+    Ind_Eff(data)
