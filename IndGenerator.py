@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import talib
 import ffn
+import json
 from HdfUtility import HdfUtility
 from dataUlt import *
 from statsmodels.tsa.stattools import adfuller
@@ -12,7 +13,8 @@ hdf = HdfUtility()
 data = hdf.hdfRead(EXT_Hdf_Path,'CFE','IC','Stitch','00','1d',startdate='20110101',enddate='20171231')
 
 # 因子的参数文件
-indparams = dict([('ma',dict([('period',[5,10,20])])),('rsi',dict([('period',[5,10,20])]))])
+with open('Indicator_setting.json','r') as f:
+    indparams = json.load(f)
 
 def ma_ind(data):
     for i in indparams['ma']['period']:
@@ -82,7 +84,7 @@ def Ind_Eff(data,mode = 'prod'):
     plt.show()
     return
 
-if __name__ == '__main__':  
+if __name__ == '__main__':
     # 计算因子
     df = rsi_ind(data)
     df['ret'] = ffn.to_returns(data['Close'])
