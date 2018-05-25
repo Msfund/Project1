@@ -58,24 +58,24 @@ def Ind_Stability(data,excode,Asset):
     dfOutputAll.to_csv(excode+'_'+Asset+'StabilityTest.csv')
     return dfOutputAll
 def Ind_Eff(data,excode,Asset,Ind_num, mode = 'prod'):
-    #mode为'sum'时累积收益率为累加
+   #mode为'sum'时累积收益率为累加
     #mode为'prod'时累积收益率为1+收益率的累乘
     #TimeSeries结构为：MultiIndex为时间和资产；有两列数据 ret 和对应的Ind
     temp = data.reset_index().dropna()
-    if mode =='prod':
-        temp['ret'] = (1+temp['ret']).cumprod()
-    if mode =='sum':
-        temp['ret'] = (temp['ret']).cumsum()
     figsize = 10/4.0*Ind_num,15/4.0*Ind_num
     f = plt.figure(dpi = 100/4.0*Ind_num,figsize = figsize)
     k = (len(data.columns)-1) #排除收益率这一列，还有k个Indicator
     j = 0
     for i in data.columns:
         if 'ret' not in i:
+            ##因子排序和收益率的
             TimeSeries = temp[[EXT_Bar_Date,'ret',i]]
             TimeSeries = TimeSeries.sort_values(by = i, ascending = 1)
+            if mode =='prod':
+                TimeSeries['ret'] = (1+TimeSeries['ret']).cumprod()
+            if mode =='sum':
+                TimeSeries['ret'] = (TimeSeries['ret']).cumsum()
             df = TimeSeries[[i,'ret']].set_index([i])
-            ##因子排序和收益率的
             j = j+1
             ax = plt.subplot(k,2,j)
             ax.plot(df)
