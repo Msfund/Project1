@@ -18,14 +18,14 @@ def bbands(data):
     return data
 
 def dema(data):
-    for i in param['dema']['timeperiod']
+    for i in param['dema']['timeperiod']:
         data['_'.join(['dema',str(i)])] = talib.DEMA(data[EXT_Bar_Close].values,
                                                      timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
 def ema(data):
-    for i in param['ema']['timeperiod']
+    for i in param['ema']['timeperiod']:
         data['_'.join(['ema',str(i)])] = talib.EMA(data[EXT_Bar_Close].values,
                                                      timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
@@ -37,7 +37,7 @@ def ht_trendline(data):
     return data
 
 def kama(data):
-    for i in param['kama']['timeperiod']
+    for i in param['kama']['timeperiod']:
         data['_'.join(['kama',str(i)])] = talib.KAMA(data[EXT_Bar_Close].values,
                                                      timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
@@ -84,7 +84,7 @@ def sar(data):
     for i in param['sar']['acceleration']:
         for j in param['sar']['maximum']:
             data['_'.join(['sar',str(i),str(j)])] \
-                = talib.SAR(data[EXT_Bar_High].values, data[EXT_Bar_Low].values
+                = talib.SAR(data[EXT_Bar_High].values, data[EXT_Bar_Low].values,
                             acceleration = i, maximum = j)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
@@ -97,7 +97,7 @@ def sarext(data):
                     for m in param['sarext']['accelerationmaxlong']:
                         for n in param['sarext']['accelerationinitshort']:
                             for o in param['sarext']['accelerationshort']:
-                                for p in param['sarext']['accelerationmaxshort']
+                                for p in param['sarext']['accelerationmaxshort']:
                                     data['_'.join(['sarext',str(i),str(j),
                                                    str(k),str(l),str(m),
                                                    str(n),str(o),str(p)])] \
@@ -337,28 +337,28 @@ def ppo(data):
     return data
 
 def roc(data):
-    for i in param['roc']['timeperiod']
+    for i in param['roc']['timeperiod']:
         data['_'.join(['roc',str(i)])] = talib.ROC(data[EXT_Bar_Close].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
 def rocp(data):
-    for i in param['rocp']['timeperiod']
+    for i in param['rocp']['timeperiod']:
         data['_'.join(['rocp',str(i)])] = talib.ROCP(data[EXT_Bar_Close].values,
                                                      timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
 def rocr(data):
-    for i in param['rocr']['timeperiod']
+    for i in param['rocr']['timeperiod']:
         data['_'.join(['rocr',str(i)])] = talib.ROCR(data[EXT_Bar_Close].values,
                                                      timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
 def rocr100(data):
-    for i in param['rocr100']['timeperiod']
+    for i in param['rocr100']['timeperiod']:
         data['_'.join(['rocr100',str(i)])] = talib.ROCR100(
                                                 data[EXT_Bar_Close].values,
                                                 timeperiod = i)
@@ -419,7 +419,7 @@ def stochrsi(data):
     return data
 
 def trix(data):
-    for i in param['trix']['timeperiod']
+    for i in param['trix']['timeperiod']:
         data['_'.join(['trix',str(i)])] = talib.TRIX(data[EXT_Bar_Close].values,
                                                      timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
@@ -429,7 +429,7 @@ def ultosc(data):
     for i in param['ultosc']['timeperiod1']:
         for j in param['ultosc']['timeperiod2']:
             for k in param['ultosc']['timeperiod3']:
-                data['_'.join(['ultosc',str(i),str(j),str(k)])]
+                data['_'.join(['ultosc',str(i),str(j),str(k)])] \
                     = talib.ULTOSC(data[EXT_Bar_High].values,
                                    data[EXT_Bar_Low].values,
                                    data[EXT_Bar_Close].values,
@@ -441,7 +441,7 @@ def ultosc(data):
 
 def willr(data):
     for i in param['willr']['timeperiod']:
-        data['_'.join(['willr',str(i)])]
+        data['_'.join(['willr',str(i)])] \
             = talib.WILLR(data[EXT_Bar_High].values,
                           data[EXT_Bar_Low].values,
                           data[EXT_Bar_Close].values,
@@ -461,7 +461,7 @@ def ad(data):
 def adosc(data):
     for i in param['adosc']['fastperiod']:
         for j in param['adosc']['slowperiod']:
-            data['_'.join(['ultosc',str(i),str(j)])]
+            data['_'.join(['ultosc',str(i),str(j)])] \
                 = talib.ADOSC(data[EXT_Bar_High].values,
                               data[EXT_Bar_Low].values,
                               data[EXT_Bar_Close].values,
@@ -511,32 +511,32 @@ def ht_trendmode(data):
 
 def avgprice(data):
     data['avgprice'] = talib.AVGPRICE(
-                            data[EXT_Bar_Open].values
-                            data[EXT_Bar_High].values
-                            data[EXT_Bar_Low].values
+                            data[EXT_Bar_Open].values,
+                            data[EXT_Bar_High].values,
+                            data[EXT_Bar_Low].values,
                             data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
 def medprice(data):
     data['medprice'] = talib.MEDPRICE(
-                            data[EXT_Bar_High].values
-                            data[EXT_Bar_Low].values
+                            data[EXT_Bar_High].values,
+                            data[EXT_Bar_Low].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
 def typprice(data):
     data['typprice'] = talib.TYPPRICE(
-                            data[EXT_Bar_High].values
-                            data[EXT_Bar_Low].values
+                            data[EXT_Bar_High].values,
+                            data[EXT_Bar_Low].values,
                             data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
 def wclprice(data):
     data['wclprice'] = talib.WCLPRICE(
-                            data[EXT_Bar_High].values
-                            data[EXT_Bar_Low].values
+                            data[EXT_Bar_High].values,
+                            data[EXT_Bar_Low].values,
                             data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
@@ -735,14 +735,14 @@ def div(data):
     return data
 
 def max(data):
-    for i in param['max']['timeperiod']
+    for i in param['max']['timeperiod']:
         data['_'.join(['max',str(i)])] = talib.MAX(data[EXT_Bar_Close].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
 def maxindex(data):
-    for i in param['maxindex']['timeperiod']
+    for i in param['maxindex']['timeperiod']:
         data['_'.join(['maxindex',str(i)])] = talib.MAXINDEX(
                                                 data[EXT_Bar_Close].values,
                                                 timeperiod = i)
@@ -750,14 +750,14 @@ def maxindex(data):
     return data
 
 def min(data):
-    for i in param['min']['timeperiod']
+    for i in param['min']['timeperiod']:
         data['_'.join(['min',str(i)])] = talib.MIN(data[EXT_Bar_Close].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
 def minindex(data):
-    for i in param['minindex']['timeperiod']
+    for i in param['minindex']['timeperiod']:
         data['_'.join(['minindex',str(i)])] = talib.MININDEX(
                                                 data[EXT_Bar_Close].values,
                                                 timeperiod = i)
@@ -765,14 +765,14 @@ def minindex(data):
     return data
 
 def minmax(data):
-    for i in param['minmax']['timeperiod']
+    for i in param['minmax']['timeperiod']:
         data['_'.join(['min',str(i)])], data['_'.join(['max',str(i)])]  \
             = talib.MININDEX(data[EXT_Bar_Close].values, timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
 def minmaxindex(data):
-    for i in param['minmaxindex']['timeperiod']
+    for i in param['minmaxindex']['timeperiod']:
         data['_'.join(['minidx',str(i)])], data['_'.join(['maxidx',str(i)])]  \
             = talib.MINMAXINDEX(data[EXT_Bar_Close].values, timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
@@ -789,7 +789,7 @@ def sub(data):
     return data
 
 def sum(data):
-    for i in param['sum']['timeperiod']
+    for i in param['sum']['timeperiod']:
         data['_'.join(['sum',str(i)])] = talib.SUM(data[EXT_Bar_Close].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)

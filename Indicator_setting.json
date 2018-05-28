@@ -16,8 +16,8 @@
         {
         "timeperiod": [2, 3, 5, 7, 10, 15, 20, 30, 40, 50, 70, 90,100],
         "matype": [0]
-        }, 
-    "MAMA": 
+        },
+    "MAMA":
         {
         "fastlimit":[0],
         "slowlimit":[0]
@@ -157,7 +157,7 @@
         "slowperiod":[10]
         },
     "OBV":
-        {},        
+        {},
     "HT_DCPERIOD":
         {},
     "HT_DCPHASE":
@@ -353,7 +353,7 @@
     "SINH":
         {},
     "SQRT":
-        {}, 
+        {},
     "TAN":
         {},
     "TANH":
@@ -380,6 +380,6 @@
         {},
     "SUM":
         {"timeperiod":[30]},
-    "RSI": 
+    "RSI":
         {"period": [2, 3, 5, 7, 10, 15, 20, 30, 40, 50, 70, 90,100]}
 }
