@@ -1,27 +1,18 @@
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import talib
-import ffn
-import json
-from HdfUtility import HdfUtility
 from dataUlt import *
 from statsmodels.tsa.stattools import adfuller
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import talib
+import ffn
+from HdfUtility import HdfUtility
 from matplotlib.backends.backend_pdf import PdfPages
+import json
+from indicator_calculating import *
 
-# 需要先手动创建结果输出的路径
+path = 'C:\\Users\\user\\GitHub\\Project1\\out2.hdf5'
 result_path = 'C:\\Users\\user\\GitHub\\Project1\\Test_Results'
-
-def ma_ind(data):
-    for i in indparams['ma']['period']:
-        data['ma'+str(i)] = talib.MA(data[EXT_Bar_Close]*data[EXT_AdjFactor].values,timeperiod=i)
-    indname = ["'ma"+str(i)+"'," for i in indparams['ma']['period']]
-    return eval("data[['ret',"+''.join(indname)+"]]")
-def rsi_ind(data):
-    for i in indparams['rsi']['period']:
-        data['rsi'+str(i)] = talib.RSI(data[EXT_Bar_Close]*data[EXT_AdjFactor].values,timeperiod=i)
-    indname = ["'rsi"+str(i)+"'," for i in indparams['rsi']['period']]
-    return eval("data[['ret',"+''.join(indname)+"]]")
+hdf = HdfUtility()
 
 def Ind_Stability(data,excode,Asset):
     '''
@@ -48,78 +39,94 @@ def Ind_Stability(data,excode,Asset):
                 dfoutput['Critical Value (%s)' %key] = value
             dfoutput['icbest'] = dftest[5]
             dfOutputAll[i] = dfoutput
-    dfOutputAll.to_csv(result_path+'\\'+excode+'_'+Asset+'_StabilityTest.csv')
-    return dfOutputAll
-
-def Ind_Eff(data,excode,Asset,Ind_num,mode = 'prod'):
+    dfOutputAll.T.to_csv(result_path+'\\'+excode+'_'+Asset+'_StabilityTest.csv')
+    return dfOutputAll.T
+def Ind_Eff(data,excode,Asset, mode = 'prod'):
     #mode为'sum'时累积收益率为累加
     #mode为'prod'时累积收益率为1+收益率的累乘
-    #TimeSeries结构为：MultiIndex为时间和资产；有两列数据 ret 和对应的Ind
+    #TimeSeries结构为：MultiIndex为时间和资产；有两列数据 ret 和对应所有的Ind
+    #最大每页行数为MaxPlotNum
+    MaxPlotNum = 6
     temp = data.reset_index().dropna()
-    if mode =='prod':
-        temp['ret'] = (1+temp['ret']).cumprod()
-    if mode =='sum':
-        temp['ret'] = (temp['ret']).cumsum()
-    figsize = 10/4.0*Ind_num,15/4.0*Ind_num
-    f = plt.figure(dpi = 100/4.0*Ind_num,figsize = figsize)
-    k = (len(data.columns)-1) #排除收益率这一列，还有k个Indicator
     j = 0
-    for i in data.columns:
-        if 'ret' not in i:
-            TimeSeries = temp[[EXT_Bar_Date,'ret',i]]
-            TimeSeries = TimeSeries.sort_values(by = i, ascending = 1)
-            df = TimeSeries[[i,'ret']].set_index([i])
-            ##因子排序和收益率的
-            j = j+1
-            ax = plt.subplot(k,2,j)
-            ax.plot(df)
-            ax.set_xlabel(i,fontsize = 10/4.0*Ind_num)
-            ax.tick_params(labelsize=8/4.0*Ind_num) 
-            ax.set_title('Cumulative return orderd by Ind_'+i)
-            xlabels = ax.get_xticklabels()
-            #ax.suptitle()
-            for xl in xlabels:
-                xl.set_rotation(30) #把x轴上的label旋转30度,以免太密集时有重叠
-            ax.set_ylabel('cum_ret',fontsize = 10/4.0*Ind_num)
-            #现在只画前两个图
-            ##因子的时间序列
-            ts = TimeSeries[[i,EXT_Bar_Date]]
-            ts = ts.sort_values(by = EXT_Bar_Date).set_index([EXT_Bar_Date])
-            j = j+1
-            ax = plt.subplot(k,2,j)
-            ax.plot(ts)
-            ax.set_xlabel('Date',fontsize = 10/4.0*Ind_num)
-            ax.tick_params(labelsize=8/4.0*Ind_num)
-            ax.set_title('TimeSeries of Ind_'+i)
-            xlabels = ax.get_xticklabels()
-            for xl in xlabels:
-                xl.set_rotation(30) #把x轴上的label旋转15度,以免太密集时有重叠
-            ax.set_ylabel(i,fontsize = 10/4.0*Ind_num)
-    plt.suptitle(Asset+'  Plot',fontsize=16/4.0*Ind_num,x=0.52,y=1.03)#储存入pdf后不能正常显示
-    f.tight_layout()
+    figsize = 10,15
+    f = plt.figure(figsize = figsize)
     with PdfPages(result_path+'\\'+excode+'_'+Asset+'_Plot.pdf') as pdf:
-        pdf.savefig()
-        plt.close()
+        for i in data.columns:
+            if 'ret' not in i:
+                ##因子排序和收益率的
+                TimeSeries = temp[[EXT_Bar_Date,'ret',i]]
+                TimeSeries = TimeSeries.sort_values(by = i, ascending = 1)
+                if mode =='prod':
+                    TimeSeries['ret'] = (1+TimeSeries['ret']).cumprod()
+                elif mode =='sum':
+                    TimeSeries['ret'] = (TimeSeries['ret']).cumsum()
+                df = TimeSeries[[i,'ret']].set_index([i])
+                j = j+1
+                ax = plt.subplot(MaxPlotNum,2,j)
+                ax.plot(df)
+                ax.set_xlabel(i,fontsize = 10/6.0*MaxPlotNum)
+                ax.tick_params(labelsize=8/6.0*MaxPlotNum)
+                ax.set_title('Cumulative return orderd by Ind_'+i)
+                xlabels = ax.get_xticklabels()
+                #ax.suptitle()
+                for xl in xlabels:
+                    xl.set_rotation(30) #把x轴上的label旋转30度,以免太密集时有重叠
+                ax.set_ylabel('cum_ret',fontsize = 10/6.0*MaxPlotNum)
+                #现在只画前两个图
+                ##因子的时间序列
+                ts = TimeSeries[[i,EXT_Bar_Date]]
+                ts = ts.sort_values(by = EXT_Bar_Date).set_index([EXT_Bar_Date])
+                j = j+1
+                ax = plt.subplot(MaxPlotNum,2,j)
+                ax.plot(ts)
+                ax.set_xlabel('Date',fontsize = 10/6.0*MaxPlotNum)
+                ax.tick_params(labelsize=8/6.0*MaxPlotNum)
+                ax.set_title('TimeSeries of Ind_'+i)
+                xlabels = ax.get_xticklabels()
+                for xl in xlabels:
+                    xl.set_rotation(30) #把x轴上的label旋转15度,以免太密集时有重叠
+                ax.set_ylabel(i,fontsize = 10/6.0*MaxPlotNum)
+            f.tight_layout()
+            if (j % (MaxPlotNum*2) == 0 and j !=0):
+                f.tight_layout()
+                #plt.subplots_adjust(top=1,bottom=0,left=0,right=1,hspace=0,wspace=0)
+                plt.suptitle(Asset+'  Plot',fontsize=16/6.0*MaxPlotNum,x=0.52,y=1.03)#储存入pdf后不能正常显示
+                pdf.savefig()
+                plt.close()
+                figsize = 10,15
+                f = plt.figure(figsize = figsize)
+                j = 0
+            if i == data.columns[-1]:
+                #plt.subplots_adjust(top=1,bottom=0,left=0,right=1,hspace=0,wspace=0)
+                pdf.savefig()
+                plt.close()
     return
 if __name__ =='__main__':
     # 因子的参数文件
     with open('Indicator_setting.json','r') as f:
-        indparams = json.load(f)
-    k = len(indparams['rsi']['period'])
-    hdf = HdfUtility()
+        param = json.load(f)
     asset_list = {}
     asset_list[EXT_EXCHANGE_CFE] = EXT_CFE_ALL
     asset_list[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
     asset_list[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
-    # asset_list[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
+    #asset_list[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
     for excode,symbol in asset_list.items():
         for i in range(len(symbol)):
             print(symbol[i])
-            df = hdf.hdfRead(EXT_Hdf_Path,excode,symbol[i],'Stitch','00','1d',startdate = '20120101',enddate = '20171231')
+            df = hdf.hdfRead(path,excode,symbol[i],'Stitch','00','1d',startdate = '20120101',enddate = '20171231')
             df[EXT_Bar_Close] = df[EXT_Bar_Close] * df[EXT_AdjFactor]
             df['ret'] = ffn.to_returns(df[EXT_Bar_Close])
             mode = 'prod'
-            df = rsi_ind(df)
+            All_Ind = pd.DataFrame([])
+            list_Ind = ['ma_ind','rsi_ind']##技术指标列表
+            for Ind_func in list_Ind:
+                Ind_temp = globals().get(Ind_func)(df)
+                if All_Ind.size == 0:
+                    All_Ind = Ind_temp
+                else:
+                    All_Ind = All_Ind.merge(Ind_temp,left_index = True,right_index = True, how = 'outer')
+            df = df[['ret']].merge(All_Ind,left_index = True,right_index = True, how = 'outer')
             dfOutputAll = Ind_Stability(df,excode,symbol[i])
-            df['ret']=df['ret'].shift(-1)
-            Ind_Eff(data = df,excode = excode,Asset = symbol[i],Ind_num = k)
+            df['ret'] = df['ret'].shift(-1)
+            Ind_Eff(data = df,excode = excode,Asset = symbol[i])
