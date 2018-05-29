@@ -1,7 +1,22 @@
 {
+    "Ind_func":
+        ["BBANDS", "DEMA", "EMA", "HT_TRENDLINE", "KAMA", "MA",
+        "MIDPOINT", "MIDPRICE", "SAR", "SAREXT", "SMA", "T3", "TEMA",
+        "TRIMA", "WMA", "ADX", "ADXR", "APO", "AROON", "AROONOSC", "BOP",
+        "CCI", "DX", "MACD", "MACDEXT", "MACDFIX", "MFI", "MINUS_DI",
+        "MINUS_DM", "MOM", "PLUS_DI", "PLUS_DM", "PPO", "ROC", "ROCP",
+        "ROCR", "ROCR100","RSI", "STOCH", "STOCHF", "TRIX", "ULTOSC", "WILLR",
+        "AD", "ADOSC", "OBV", "HT_DCPERIOD", "HT_DCPHASE", "HT_PHASOR",
+        "HT_SINE", "HT_TRENDMODE", "AVGPRICE", "MEDPRICE", "TYPPRICE",
+        "WCLPRICE", "ATR", "NATR", "TRANGE", "BETA", "CORREL", "LINEARREG",
+        "LINEARREG_ANGLE", "LINEARREG_INTERCEPT", "LINEARREG_SLOPE", "STDDEV",
+        "TSF", "VAR", "ATAN", "CEIL", "COS",
+        "FLOOR", "LN", "LOG10", "SIN",  "SQRT", "TAN", "ADD",
+        "DIV", "MAX", "MAXINDEX", "MIN", "MININDEX", "MINMAX", "MINMAXINDEX",
+        "MULT", "SUB", "SUM"],
     "BBANDS":
         {
-        "timperiod":[5, 10, 15, 20],
+        "timeperiod":[5, 10, 15, 20],
         "nbdevup":[2],
         "nbdevdn":[2],
         "matype":[0]
@@ -11,7 +26,7 @@
     "EMA":
         {"timeperiod" : [10, 12, 14, 26, 30]},
     "KAMA":
-        {},
+        {"timeperiod" : [10, 12, 14, 26, 30]},
     "MA":
         {
         "timeperiod": [2, 3, 5, 7, 10, 15, 20, 30, 40, 50, 70, 90,100],
@@ -19,8 +34,8 @@
         },
     "MAMA":
         {
-        "fastlimit":[0],
-        "slowlimit":[0]
+        "fastlimit":[0.5],
+        "slowlimit":[0.5]
         },
     "MAVP":
         {
@@ -29,9 +44,9 @@
         "matype":[0]
         },
     "MIDPOINT":
-        {"timperiod" : [14]},
+        {"timeperiod" : [14]},
     "MIDPRICE":
-        {"timperiod" : [14]},
+        {"timeperiod" : [14]},
     "SAR":
         {
         "acceleration" : [0],
@@ -52,7 +67,7 @@
         {"timeperiod": [30]},
     "T3":
         {
-        "timperiod" : [5],
+        "timeperiod" : [5],
         "vfactor": [0]
         },
     "TEMA":
@@ -100,7 +115,7 @@
         {"signalperiod":[9]},
     "MFI":
         {"timeperiod": [14]},
-    "MIUNS_DI":
+    "MINUS_DI":
         {"timeperiod": [14]},
     "MINUS_DM":
         {"timeperiod": [14]},
@@ -364,7 +379,7 @@
         {},
     "MAX":
         {"timeperiod":[30]},
-    "MAXMINDEX":
+    "MAXINDEX":
         {"timeperiod":[30]},
     "MIN":
         {"timeperiod":[30]},
@@ -379,7 +394,5 @@
     "SUB":
         {},
     "SUM":
-        {"timeperiod":[30]},
-    "RSI":
-        {"period": [2, 3, 5, 7, 10, 15, 20, 30, 40, 50, 70, 90,100]}
+        {"timeperiod":[30]}
 }

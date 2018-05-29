@@ -10,7 +10,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import json
 from Indicator_calculating import *
 
-path = 'C:\\Users\\user\\GitHub\\Project1\\out2.hdf5'
+path = 'C:\\Users\\user\\GitHub\\Project1\\out.hdf5'
 result_path = 'C:\\Users\\user\\GitHub\\Project1\\Test_Results'
 hdf = HdfUtility()
 
@@ -127,6 +127,7 @@ if __name__ =='__main__':
     asset_list[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
     #asset_list[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
     active_asset = find_active_asset(asset_list)
+    list_Ind = param['Ind_func'] #技术指标列表
     for i in range(len(active_asset)):
         print(' '.join([active_asset[i][0],active_asset[i][1]]))
         df = hdf.hdfRead(path,active_asset[i][0],active_asset[i][1],'Stitch','00','1d',startdate = '20120101',enddate = '20171231')
@@ -134,7 +135,6 @@ if __name__ =='__main__':
         df['ret'] = ffn.to_returns(df[EXT_Bar_Close])
         mode = 'prod'
         All_Ind = pd.DataFrame([])
-        list_Ind = ['ma_ind','rsi_ind']##技术指标列表
         for Ind_func in list_Ind:
             Ind_temp = globals().get(Ind_func)(df)
             if All_Ind.size == 0:

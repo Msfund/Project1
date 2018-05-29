@@ -161,7 +161,7 @@ EXT_DownLimit = 'DownLimit'
 EXT_AdjFactor = 'AdjFactor'
 
 # Header to delete when processing data
-EXT_Del_Header = 'AdjFactor,PreSettle,Open,High,Low,Close,Settle,Volume,OpenInterest'
+EXT_Del_Header = 'AdjFactor,PreSettle,Open,High,Low,Close,Settle,Volume,OpenInterest,ret'
 # Header for trade data from Wind
 EXT_In_Header = 'trade_dt,s_info_windcode,s_dq_presettle,s_dq_open,s_dq_high,s_dq_low,s_dq_close,s_dq_settle,s_dq_volume,s_dq_oi'
 # Header for delistdate data from Wind

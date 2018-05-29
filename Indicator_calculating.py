@@ -1,63 +1,66 @@
 import talib
 from dataUlt import *
-
+import json
 # -----------------------TA_Lib documents Page 1------------------------------
 # ----------------------------Overlap Studies --------------------------------
+with open('Indicator_setting.json','r') as f:
+    param = json.load(f)
 
-def bbands(data):
-    for i in param['bbands']['timeperiod']:
-        for j in param['bbands']['nbdevup']:
-            for k in param['bbands']['nbdevdn']:
-                for l in param['bbands']['matype']:
-                    data['_'.join(['upperband',str(i),str(j),str(k),str(l)])], \
-                    data['_'.join(['middleband',str(i),str(j),str(k),str(l)])], \
-                    data['_'.join(['lowerband',str(i),str(j),str(k),str(l)])] \
+
+def BBANDS(data):
+    for i in param['BBANDS']['timeperiod']:
+        for j in param['BBANDS']['nbdevup']:
+            for k in param['BBANDS']['nbdevdn']:
+                for l in param['BBANDS']['matype']:
+                    data['_'.join(['BBANDS_UPPERBAND',str(i),str(j),str(k),str(l)])], \
+                    data['_'.join(['BBANDS_MIDDLEBAND',str(i),str(j),str(k),str(l)])], \
+                    data['_'.join(['BBANDS_LOWERBAND',str(i),str(j),str(k),str(l)])] \
                         = talib.BBANDS(data[EXT_Bar_Close].values, timeperiod = i,
                                        nbdevup = j, nbdevdn = k, matype = l)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def dema(data):
-    for i in param['dema']['timeperiod']:
-        data['_'.join(['dema',str(i)])] = talib.DEMA(data[EXT_Bar_Close].values,
+def DEMA(data):
+    for i in param['DEMA']['timeperiod']:
+        data['_'.join(['DEMA',str(i)])] = talib.DEMA(data[EXT_Bar_Close].values,
                                                      timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def ema(data):
-    for i in param['ema']['timeperiod']:
-        data['_'.join(['ema',str(i)])] = talib.EMA(data[EXT_Bar_Close].values,
+def EMA(data):
+    for i in param['EMA']['timeperiod']:
+        data['_'.join(['EMA',str(i)])] = talib.EMA(data[EXT_Bar_Close].values,
                                                      timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def ht_trendline(data):
-    data['ht_trendline'] = talib.HT_TRENDLINE(data[EXT_Bar_Close].values)
+def HT_TRENDLINE(data):
+    data['HT_TRENDLINE'] = talib.HT_TRENDLINE(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def kama(data):
-    for i in param['kama']['timeperiod']:
-        data['_'.join(['kama',str(i)])] = talib.KAMA(data[EXT_Bar_Close].values,
+def KAMA(data):
+    for i in param['KAMA']['timeperiod']:
+        data['_'.join(['KAMA',str(i)])] = talib.KAMA(data[EXT_Bar_Close].values,
                                                      timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def ma(data):
-    for i in param['ma']['timeperiod']:
-        data['_'.join(['ma',str(i)])] = talib.MA(data[EXT_Bar_Close].values,
+def MA(data):
+    for i in param['MA']['timeperiod']:
+        data['_'.join(['MA',str(i)])] = talib.MA(data[EXT_Bar_Close].values,
                                                  timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def mama(data):
+def MAMA(data):
     ''' fastLimit : Upper limit use in the adaptive algorithm.
         slowLimit : Lower limit use in the adaptive algorithm.
         Valid range from 0.01 to 0.99.'''
-    for i in param['mama']['fastlimit']:
-        for j in param['mama']['slowlimit']:
-            data['_'.join(['mama',str(i),str(j)])], \
-            data['_'.join(['fama',str(i),str(j)])] \
+    for i in param['MAMA']['fastlimit']:
+        for j in param['MAMA']['slowlimit']:
+            data['_'.join(['MAMA',str(i),str(j)])], \
+            data['_'.join(['FAMA',str(i),str(j)])] \
                 = talib.MAMA(data[EXT_Bar_Close].values,
                              fastlimit = i, slowlimit = j)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
@@ -65,43 +68,43 @@ def mama(data):
 
 # real = MAVP(close, periods, minperiod=2, maxperiod=30, matype=0)
 
-def midpoint(data):
-    for i in param['midpoint']['timeperiod']:
-        data['_'.join(['midpoint',str(i)])] \
+def MIDPOINT(data):
+    for i in param['MIDPOINT']['timeperiod']:
+        data['_'.join(['MIDPOINT',str(i)])] \
             = talib.MIDPOINT(data[EXT_Bar_Close].values,timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def midprice(data):
-    for i in param['midprice']['timeperiod']:
-        data['_'.join(['midprice',str(i)])] \
+def MIDPRICE(data):
+    for i in param['MIDPRICE']['timeperiod']:
+        data['_'.join(['MIDPRICE',str(i)])] \
             = talib.MIDPRICE(data[EXT_Bar_High].values, data[EXT_Bar_Low].values,
                              timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def sar(data):
-    for i in param['sar']['acceleration']:
-        for j in param['sar']['maximum']:
-            data['_'.join(['sar',str(i),str(j)])] \
+def SAR(data):
+    for i in param['SAR']['acceleration']:
+        for j in param['SAR']['maximum']:
+            data['_'.join(['SAR',str(i),str(j)])] \
                 = talib.SAR(data[EXT_Bar_High].values, data[EXT_Bar_Low].values,
                             acceleration = i, maximum = j)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def sarext(data):
-    for i in param['sarext']['startvalue']:
-        for j in param['sarext']['offsetonreverse']:
-            for k in param['sarext']['accelerationinitlong']:
-                for l in param['sarext']['accelerationlong']:
-                    for m in param['sarext']['accelerationmaxlong']:
-                        for n in param['sarext']['accelerationinitshort']:
-                            for o in param['sarext']['accelerationshort']:
-                                for p in param['sarext']['accelerationmaxshort']:
-                                    data['_'.join(['sarext',str(i),str(j),
+def SAREXT(data):
+    for i in param['SAREXT']['startvalue']:
+        for j in param['SAREXT']['offsetonreverse']:
+            for k in param['SAREXT']['accelerationinitlong']:
+                for l in param['SAREXT']['accelerationlong']:
+                    for m in param['SAREXT']['accelerationmaxlong']:
+                        for n in param['SAREXT']['accelerationinitshort']:
+                            for o in param['SAREXT']['accelerationshort']:
+                                for p in param['SAREXT']['accelerationmaxshort']:
+                                    data['_'.join(['SAREXT',str(i),str(j),
                                                    str(k),str(l),str(m),
                                                    str(n),str(o),str(p)])] \
-                                        = talib.SAR(data[EXT_Bar_High].values,
+                                        = talib.SAREXT(data[EXT_Bar_High].values,
                                                     data[EXT_Bar_Low].values,
                                                     startvalue = i,
                                                     offsetonreverse = j,
@@ -114,40 +117,41 @@ def sarext(data):
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def sma(data):
-    for i in param['sma']['timeperiod']:
-        data['_'.join(['sma',str(i)])] = talib.SMA(data[EXT_Bar_Close].values,
+def SMA(data):
+    for i in param['SMA']['timeperiod']:
+        data['_'.join(['SMA',str(i)])] = talib.SMA(data[EXT_Bar_Close].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def t3(data):
-    for i in param['t3']['timeperiod']:
-        for j in param['t3']['vfactor']:
-            data['_'.join(['t3',str(i),str(j)])] \
+def T3(data):
+    for i in param['T3']['timeperiod']:
+        for j in param['T3']['vfactor']:
+            data['_'.join(['T3',str(i),str(j)])] \
                 = talib.T3(data[EXT_Bar_Close].values,
                             timeperiod = i,
                             vfactor = j)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def tema(data):
-    for i in param['tema']['timeperiod']:
-        data['_'.join(['tema',str(i)])] = talib.TEMA(data[EXT_Bar_Close].values,
+def TEMA(data):
+    for i in param['TEMA']['timeperiod']:
+        data['_'.join(['TEMA',str(i)])] = talib.TEMA(data[EXT_Bar_Close].values,
                                                      timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def trima(data):
-    for i in param['trima']['timeperiod']:
-        data['_'.join(['trima',str(i)])] = talib.TRIMA(data[EXT_Bar_Close].values,
+def TRIMA(data):
+    for i in param['TRIMA']['timeperiod']:
+        data['_'.join(['TRIMA',str(i)])] = talib.TRIMA(data[EXT_Bar_Close].values,
                                                        timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
+
     return data
 
-def wma(data):
-    for i in param['wma']['timeperiod']:
-        data['_'.join(['wma',str(i)])] = talib.WMA(data[EXT_Bar_Close].values,
+def WMA(data):
+    for i in param['WMA']['timeperiod']:
+        data['_'.join(['WMA',str(i)])] = talib.WMA(data[EXT_Bar_Close].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
@@ -155,105 +159,105 @@ def wma(data):
 # -----------------------TA_Lib documents Page 2------------------------------
 # --------------------------Momentum Indicators-------------------------------
 
-def adx(data):
-    for i in param['adx']['timeperiod']:
-        data['_'.join(['adx',str(i)])] = talib.ADX(data[EXT_Bar_High].values,
+def ADX(data):
+    for i in param['ADX']['timeperiod']:
+        data['_'.join(['ADX',str(i)])] = talib.ADX(data[EXT_Bar_High].values,
                                                    data[EXT_Bar_Low].values,
                                                    data[EXT_Bar_Close].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def adxr(data):
-    for i in param['adxr']['timeperiod']:
-        data['_'.join(['adxr',str(i)])] = talib.ADXR(data[EXT_Bar_High].values,
+def ADXR(data):
+    for i in param['ADXR']['timeperiod']:
+        data['_'.join(['ADXR',str(i)])] = talib.ADXR(data[EXT_Bar_High].values,
                                                      data[EXT_Bar_Low].values,
                                                      data[EXT_Bar_Close].values,
                                                      timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def apo(data):
-    for i in param['apo']['fastperiod']:
-        for j in param['apo']['slowperiod']:
-            for k in param['apo']['matype']:
-                data['_'.join(['apo',str(i),str(j),str(k)])] \
+def APO(data):
+    for i in param['APO']['fastperiod']:
+        for j in param['APO']['slowperiod']:
+            for k in param['APO']['matype']:
+                data['_'.join(['APO',str(i),str(j),str(k)])] \
                     = talib.APO(data[EXT_Bar_Close].values,
                                 fastperiod = i, slowperiod = j, matype = k)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def aroon(data):
-    for i in param['aroon']['timeperiod']:
-        data['_'.join(['aroondown',str(i)])], \
-        data['_'.join(['aroonup',str(i)])] \
+def AROON(data):
+    for i in param['AROON']['timeperiod']:
+        data['_'.join(['ARRONDOWN',str(i)])], \
+        data['_'.join(['ARRONUP',str(i)])] \
             = talib.AROON(data[EXT_Bar_High].values, data[EXT_Bar_Low].values,
                           timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def aroonosc(data):
-    for i in param['aroonosc']['timeperiod']:
-        data['_'.join(['aroonosc',str(i)])] \
+def AROONOSC(data):
+    for i in param['AROONOSC']['timeperiod']:
+        data['_'.join(['AROONOSC',str(i)])] \
             = talib.AROONOSC(data[EXT_Bar_High].values,
                              data[EXT_Bar_Low].values,
                              timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def bop(data):
-    data['bop'] = talib.BOP(data[EXT_Bar_Open].values, data[EXT_Bar_High].values,
+def BOP(data):
+    data['BOP'] = talib.BOP(data[EXT_Bar_Open].values, data[EXT_Bar_High].values,
                             data[EXT_Bar_Low].values, data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def cci(data):
-    for i in param['cci']['timeperiod']:
-        data['_'.join(['cci',str(i)])] \
+def CCI(data):
+    for i in param['CCI']['timeperiod']:
+        data['_'.join(['CCI',str(i)])] \
             = talib.CCI(data[EXT_Bar_High].values, data[EXT_Bar_Low].values,
                         data[EXT_Bar_Close].values, timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def cmo(data):
-    for i in param['cmo']['timeperiod']:
-        data['_'.join(['cmo',str(i)])] = talib.CMO(data[EXT_Bar_Close].values,
+def CMO(data):
+    for i in param['CMO']['timeperiod']:
+        data['_'.join(['CMO',str(i)])] = talib.CMO(data[EXT_Bar_Close].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def dx(data):
-    for i in param['dx']['timeperiod']:
-        data['_'.join(['dx',str(i)])] \
-            = talib.CCI(data[EXT_Bar_High].values, data[EXT_Bar_Low].values,
+def DX(data):
+    for i in param['DX']['timeperiod']:
+        data['_'.join(['DX',str(i)])] \
+            = talib.DX(data[EXT_Bar_High].values, data[EXT_Bar_Low].values,
                         data[EXT_Bar_Close].values, timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def macd(data):
-    for i in param['macd']['fastperiod']:
-        for j in param['macd']['slowperiod']:
-            for k in param['macd']['signalperiod']:
-                data['_'.join(['macd',str(i),str(j),str(k)])], \
-                data['_'.join(['macdsignal',str(i),str(j),str(k)])], \
-                data['_'.join(['macdhist',str(i),str(j),str(k)])] \
+def MACD(data):
+    for i in param['MACD']['fastperiod']:
+        for j in param['MACD']['slowperiod']:
+            for k in param['MACD']['signalperiod']:
+                data['_'.join(['MACD',str(i),str(j),str(k)])], \
+                data['_'.join(['MACDSIGNAL',str(i),str(j),str(k)])], \
+                data['_'.join(['MACDHIST',str(i),str(j),str(k)])] \
                     = talib.MACD(data[EXT_Bar_Close].values, fastperiod = i,
                                  slowperiod = j, signalperiod = k)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def macdext(data):
-    for i in param['macdext']['fastperiod']:
-        for j in param['macdext']['fastmatype']:
-            for k in param['macdext']['slowperiod']:
-                for l in param['macdext']['slowmatype']:
-                    for m in param['macdext']['signalperiod']:
-                        for n in param['macdext']['signalmatype']:
-                            data['_'.join(['macd',str(i),str(j),str(k),
+def MACDEXT(data):
+    for i in param['MACDEXT']['fastperiod']:
+        for j in param['MACDEXT']['fastmatype']:
+            for k in param['MACDEXT']['slowperiod']:
+                for l in param['MACDEXT']['slowmatype']:
+                    for m in param['MACDEXT']['signalperiod']:
+                        for n in param['MACDEXT']['signalmatype']:
+                            data['_'.join(['MACD',str(i),str(j),str(k),
                                            str(l),str(m),str(n)])], \
-                            data['_'.join(['macdsignal',str(i),str(j),str(k),
+                            data['_'.join(['MACDSIGNAL',str(i),str(j),str(k),
                                            str(l),str(m),str(n)])], \
-                            data['_'.join(['macdhist',str(i),str(j),str(k),
+                            data['_'.join(['MACDHIST',str(i),str(j),str(k),
                                            str(l),str(m),str(n)])] \
                                 = talib.MACDEXT(data[EXT_Bar_Close].values,
                                                 fastperiod = i, fastmatype = j,
@@ -262,18 +266,18 @@ def macdext(data):
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def macdfix(data):
-    for i in param['macdfix']['signalperiod']:
-        data['_'.join(['macd',str(i)])], \
-        data['_'.join(['macdsignal',str(i)])], \
-        data['_'.join(['macdhist',str(i)])] \
+def MACDFIX(data):
+    for i in param['MACDFIX']['signalperiod']:
+        data['_'.join(['MACD',str(i)])], \
+        data['_'.join(['MACDSIGNAL',str(i)])], \
+        data['_'.join(['MACDHIST',str(i)])] \
             = talib.MACDFIX(data[EXT_Bar_Close].values, signalperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
 def MFI(data):
-    for i in params['mfi']['timeperiod']:
-        data['_'.join(['mfi',str(i)])] = talib.MFI(data[EXT_Bar_High].values,
+    for i in param['MFI']['timeperiod']:
+        data['_'.join(['MFI',str(i)])] = talib.MFI(data[EXT_Bar_High].values,
                                                    data[EXT_Bar_Low].values,
                                                    data[EXT_Bar_Close].values,
                                                    data[EXT_Bar_Volume].values,
@@ -281,9 +285,9 @@ def MFI(data):
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def minus_di(data):
-    for i in params['minus_di']['timeperiod']:
-        data['_'.join(['minus_di',str(i)])] = talib.MINUS_DI(
+def MINUS_DI(data):
+    for i in param['MINUS_DI']['timeperiod']:
+        data['_'.join(['MINUS_DI',str(i)])] = talib.MINUS_DI(
                                                    data[EXT_Bar_High].values,
                                                    data[EXT_Bar_Low].values,
                                                    data[EXT_Bar_Close].values,
@@ -291,25 +295,25 @@ def minus_di(data):
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def minus_dm(data):
-    for i in params['minus_dm']['timeperiod']:
-        data['_'.join(['minus_dm',str(i)])] = talib.MINUS_DM(
+def MINUS_DM(data):
+    for i in param['MINUS_DM']['timeperiod']:
+        data['_'.join(['MINUS_DM',str(i)])] = talib.MINUS_DM(
                                                    data[EXT_Bar_High].values,
                                                    data[EXT_Bar_Low].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def mom(data):
-    for i in params['mom']['timeperiod']:
-        data['_'.join(['mom',str(i)])] = talib.MOM(data[EXT_Bar_Close].values,
+def MOM(data):
+    for i in param['MOM']['timeperiod']:
+        data['_'.join(['MOM',str(i)])] = talib.MOM(data[EXT_Bar_Close].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def plus_di(data):
-    for i in params['plus_di']['timeperiod']:
-        data['_'.join(['plus_di',str(i)])] = talib.PLUS_DI(
+def PLUS_DI(data):
+    for i in param['PLUS_DI']['timeperiod']:
+        data['_'.join(['PLUS_DI',str(i)])] = talib.PLUS_DI(
                                                    data[EXT_Bar_High].values,
                                                    data[EXT_Bar_Low].values,
                                                    data[EXT_Bar_Close].values,
@@ -317,70 +321,70 @@ def plus_di(data):
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def plus_dm(data):
-    for i in params['plus_dm']['timeperiod']:
-        data['_'.join(['plus_dm',str(i)])] = talib.PLUS_DM(
+def PLUS_DM(data):
+    for i in param['PLUS_DM']['timeperiod']:
+        data['_'.join(['PLUS_DM',str(i)])] = talib.PLUS_DM(
                                                    data[EXT_Bar_High].values,
                                                    data[EXT_Bar_Low].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def ppo(data):
-    for i in param['ppo']['fastperiod']:
-        for j in param['ppo']['slowperiod']:
-            for k in param['ppo']['matype']:
-                data['_'.join(['pop',str(i),str(j),str(k)])] \
-                    = talib.POP(data[EXT_Bar_Close].values, fastperiod = i,
+def PPO(data):
+    for i in param['PPO']['fastperiod']:
+        for j in param['PPO']['slowperiod']:
+            for k in param['PPO']['matype']:
+                data['_'.join(['PPO',str(i),str(j),str(k)])] \
+                    = talib.PPO(data[EXT_Bar_Close].values, fastperiod = i,
                                  slowperiod = j, matype = k)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def roc(data):
-    for i in param['roc']['timeperiod']:
-        data['_'.join(['roc',str(i)])] = talib.ROC(data[EXT_Bar_Close].values,
+def ROC(data):
+    for i in param['ROC']['timeperiod']:
+        data['_'.join(['ROC',str(i)])] = talib.ROC(data[EXT_Bar_Close].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def rocp(data):
-    for i in param['rocp']['timeperiod']:
-        data['_'.join(['rocp',str(i)])] = talib.ROCP(data[EXT_Bar_Close].values,
+def ROCP(data):
+    for i in param['ROCP']['timeperiod']:
+        data['_'.join(['ROCP',str(i)])] = talib.ROCP(data[EXT_Bar_Close].values,
                                                      timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def rocr(data):
-    for i in param['rocr']['timeperiod']:
-        data['_'.join(['rocr',str(i)])] = talib.ROCR(data[EXT_Bar_Close].values,
+def ROCR(data):
+    for i in param['ROCR']['timeperiod']:
+        data['_'.join(['ROCR',str(i)])] = talib.ROCR(data[EXT_Bar_Close].values,
                                                      timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def rocr100(data):
-    for i in param['rocr100']['timeperiod']:
-        data['_'.join(['rocr100',str(i)])] = talib.ROCR100(
+def ROCR100(data):
+    for i in param['ROCR100']['timeperiod']:
+        data['_'.join(['ROCR100',str(i)])] = talib.ROCR100(
                                                 data[EXT_Bar_Close].values,
                                                 timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def rsi(data):
-    for i in param['rsi']['timeperiod']:
-        data['_'.join(['rsi',str(i)])] = talib.RSI(data[EXT_Bar_Close].values,
+def RSI(data):
+    for i in param['RSI']['timeperiod']:
+        data['_'.join(['RSI',str(i)])] = talib.RSI(data[EXT_Bar_Close].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def stoch(data):
-    for i in param['stoch']['fastk_period']:
-        for j in param['stoch']['slowk_period']:
-            for k in param['stoch']['slowk_matype']:
-                for l in param['stoch']['slowd_period']:
-                    for m in param['stoch']['slowd_matype']:
-                        data['_'.join(['slowk',str(i),str(j),str(k),
+def STOCH(data):
+    for i in param['STOCH']['fastk_period']:
+        for j in param['STOCH']['slowk_period']:
+            for k in param['STOCH']['slowk_matype']:
+                for l in param['STOCH']['slowd_period']:
+                    for m in param['STOCH']['slowd_matype']:
+                        data['_'.join(['STOCH_SLOWK',str(i),str(j),str(k),
                                        str(l),str(m)])], \
-                        data['_'.join(['slowd',str(i),str(j),str(k),
+                        data['_'.join(['STOCH_SLOWD',str(i),str(j),str(k),
                                        str(l),str(m)])] \
                             = talib.STOCH(data[EXT_Bar_High].values,
                                           data[EXT_Bar_Low].values,
@@ -391,45 +395,45 @@ def stoch(data):
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def stochf(data):
-    for i in param['stochf']['fastk_period']:
-        for j in param['stochf']['fastd_period']:
-            for k in param['stochf']['fastd_matype']:
-                data['_'.join(['fastk',str(i),str(j),str(k)])], \
-                data['_'.join(['fastd',str(i),str(j),str(k)])] \
+def STOCHF(data):
+    for i in param['STOCHF']['fastk_period']:
+        for j in param['STOCHF']['fastd_period']:
+            for k in param['STOCHF']['fastd_matype']:
+                data['_'.join(['STOCHF_FASTK',str(i),str(j),str(k)])], \
+                data['_'.join(['STOCHF_FASTD',str(i),str(j),str(k)])] \
                     = talib.STOCHF(data[EXT_Bar_High].values,
                                    data[EXT_Bar_Low].values,
                                    data[EXT_Bar_Close].values,
-                                   fastk_period = i, slowd_period = j,
+                                   fastk_period = i, fastd_period = j,
                                    fastd_matype = k)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def stochrsi(data):
-    for i in param['stochrsi']['timeperiod']:
-        for j in param['stochrsi']['fastk_period']:
-            for k in param['stochrsi']['fastd_period']:
-                for l in param['stochrsi']['fastd_matype']:
-                    data['_'.join(['fastk',str(i),str(j),str(k),str(l)])], \
-                    data['_'.join(['fastd',str(i),str(j),str(k),str(l)])] \
+def STOCHRSI(data):
+    for i in param['STOCHRSI']['timeperiod']:
+        for j in param['STOCHRSI']['fastk_period']:
+            for k in param['STOCHRSI']['fastd_period']:
+                for l in param['STOCHRSI']['fastd_matype']:
+                    data['_'.join(['STOCHRSI_FASTK',str(i),str(j),str(k),str(l)])], \
+                    data['_'.join(['STOCHRSI_FASTD',str(i),str(j),str(k),str(l)])] \
                         = talib.STOCHRSI(data[EXT_Bar_Close].values,
                                          timeperiod = i, fastk_period = j,
                                          fastd_period = k, fastd_matype = l)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def trix(data):
-    for i in param['trix']['timeperiod']:
-        data['_'.join(['trix',str(i)])] = talib.TRIX(data[EXT_Bar_Close].values,
+def TRIX(data):
+    for i in param['TRIX']['timeperiod']:
+        data['_'.join(['TRIX',str(i)])] = talib.TRIX(data[EXT_Bar_Close].values,
                                                      timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def ultosc(data):
-    for i in param['ultosc']['timeperiod1']:
-        for j in param['ultosc']['timeperiod2']:
-            for k in param['ultosc']['timeperiod3']:
-                data['_'.join(['ultosc',str(i),str(j),str(k)])] \
+def ULTOSC(data):
+    for i in param['ULTOSC']['timeperiod1']:
+        for j in param['ULTOSC']['timeperiod2']:
+            for k in param['ULTOSC']['timeperiod3']:
+                data['_'.join(['ULTOSC',str(i),str(j),str(k)])] \
                     = talib.ULTOSC(data[EXT_Bar_High].values,
                                    data[EXT_Bar_Low].values,
                                    data[EXT_Bar_Close].values,
@@ -439,9 +443,9 @@ def ultosc(data):
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def willr(data):
-    for i in param['willr']['timeperiod']:
-        data['_'.join(['willr',str(i)])] \
+def WILLR(data):
+    for i in param['WILLR']['timeperiod']:
+        data['_'.join(['WILLR',str(i)])]\
             = talib.WILLR(data[EXT_Bar_High].values,
                           data[EXT_Bar_Low].values,
                           data[EXT_Bar_Close].values,
@@ -452,16 +456,16 @@ def willr(data):
 # -----------------------TA_Lib documents Page 3------------------------------
 # --------------------------Volume Indicators---------------------------------
 
-def ad(data):
-    data['ad'] = talib.AD(data[EXT_Bar_High].values, data[EXT_Bar_Low].values,
+def AD(data):
+    data['AD'] = talib.AD(data[EXT_Bar_High].values, data[EXT_Bar_Low].values,
                           data[EXT_Bar_Close].values, data[EXT_Bar_Volume].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def adosc(data):
-    for i in param['adosc']['fastperiod']:
-        for j in param['adosc']['slowperiod']:
-            data['_'.join(['ultosc',str(i),str(j)])] \
+def ADOSC(data):
+    for i in param['ADOSC']['fastperiod']:
+        for j in param['ADOSC']['slowperiod']:
+            data['_'.join(['ADOSC',str(i),str(j)])] \
                 = talib.ADOSC(data[EXT_Bar_High].values,
                               data[EXT_Bar_Low].values,
                               data[EXT_Bar_Close].values,
@@ -471,8 +475,8 @@ def adosc(data):
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def obv(data):
-    data['obv'] = talib.OBV(data[EXT_Bar_Close].values,
+def OBV(data):
+    data['OBV'] = talib.OBV(data[EXT_Bar_Close].values,
                             data[EXT_Bar_Volume].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
@@ -480,37 +484,38 @@ def obv(data):
 # -----------------------TA_Lib documents Page 4------------------------------
 # ----------------------------Cycle Indicator---------------------------------
 
-def ht_dcperiod(data):
-    data['ht_dcperiod'] = talib.HT_DCPERIOD(data[EXT_Bar_Close].values)
+def HT_DCPERIOD(data):
+    data['HT_DCPERIOD'] = talib.HT_DCPERIOD(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def ht_dcphase(data):
-    data['ht_dcphase'] = talib.HT_DCPHASE(data[EXT_Bar_Close].values)
+def HT_DCPHASE(data):
+    data['HT_DCPHASE'] = talib.HT_DCPHASE(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
+
     return data
 
-def ht_phasor(data):
+def HT_PHASOR(data):
     data['inphase'], data['quadrature'] = talib.HT_PHASOR(
                                             data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def ht_sine(data):
+def HT_SINE(data):
     data['sine'], data['leadsine'] = talib.HT_SINE(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def ht_trendmode(data):
-    data['ht_trendmode'] = talib.HT_TRENDMODE(data[EXT_Bar_Close].values)
+def HT_TRENDMODE(data):
+    data['HT_TRENDMODE'] = talib.HT_TRENDMODE(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
 # -----------------------TA_Lib documents Page 5------------------------------
 # ----------------------------Price Transform---------------------------------
 
-def avgprice(data):
-    data['avgprice'] = talib.AVGPRICE(
+def AVGPRICE(data):
+    data['AVGPRICE'] = talib.AVGPRICE(
                             data[EXT_Bar_Open].values,
                             data[EXT_Bar_High].values,
                             data[EXT_Bar_Low].values,
@@ -518,23 +523,23 @@ def avgprice(data):
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def medprice(data):
-    data['medprice'] = talib.MEDPRICE(
+def MEDPRICE(data):
+    data['MEDPRICE'] = talib.MEDPRICE(
                             data[EXT_Bar_High].values,
                             data[EXT_Bar_Low].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def typprice(data):
-    data['typprice'] = talib.TYPPRICE(
+def TYPPRICE(data):
+    data['TYPPRICE'] = talib.TYPPRICE(
                             data[EXT_Bar_High].values,
                             data[EXT_Bar_Low].values,
                             data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def wclprice(data):
-    data['wclprice'] = talib.WCLPRICE(
+def WCLPRICE(data):
+    data['WCLPRICE'] = talib.WCLPRICE(
                             data[EXT_Bar_High].values,
                             data[EXT_Bar_Low].values,
                             data[EXT_Bar_Close].values)
@@ -543,26 +548,26 @@ def wclprice(data):
 
 # -----------------------TA_Lib documents Page 6------------------------------
 # ------------------------Volatility Indicators-------------------------------
-def atr(data):
-    for i in param['atr']['timeperiod']:
-        data['_'.join(['atr',str(i)])] = talib.ATR(data[EXT_Bar_High].values,
+def ATR(data):
+    for i in param['ATR']['timeperiod']:
+        data['_'.join(['ATR',str(i)])] = talib.ATR(data[EXT_Bar_High].values,
                                                    data[EXT_Bar_Low].values,
                                                    data[EXT_Bar_Close].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def natr(data):
-    for i in param['natr']['timeperiod']:
-        data['_'.join(['natr',str(i)])] = talib.NATR(data[EXT_Bar_High].values,
+def NATR(data):
+    for i in param['NATR']['timeperiod']:
+        data['_'.join(['NATR',str(i)])] = talib.NATR(data[EXT_Bar_High].values,
                                                      data[EXT_Bar_Low].values,
                                                      data[EXT_Bar_Close].values,
                                                      timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def trange(data):
-    data['trange'] = talib.TRANGE(data[EXT_Bar_High].values,
+def TRANGE(data):
+    data['TRANGE'] = talib.TRANGE(data[EXT_Bar_High].values,
                                   data[EXT_Bar_Low].values,
                                   data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
@@ -571,72 +576,72 @@ def trange(data):
 # -----------------------TA_Lib documents Page 7------------------------------
 # ------------------------Statistic Functions-------------------------------
 
-def beta(data):
-    for i in param['beta']['timeperiod']:
-        data['_'.join(['beta',str(i)])] = talib.BETA(data[EXT_Bar_High].values,
+def BETA(data):
+    for i in param['BETA']['timeperiod']:
+        data['_'.join(['BETA',str(i)])] = talib.BETA(data[EXT_Bar_High].values,
                                                      data[EXT_Bar_Low].values,
                                                      timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def correl(data):
-    for i in param['correl']['timeperiod']:
-        data['_'.join(['correl',str(i)])] = talib.CORREL(
+def CORREL(data):
+    for i in param['CORREL']['timeperiod']:
+        data['_'.join(['CORREL',str(i)])] = talib.CORREL(
                                                 data[EXT_Bar_High].values,
                                                 data[EXT_Bar_Low].values,
                                                 timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def linearreg(data):
-    for i in param['linearreg']['timeperiod']:
-        data['_'.join(['linearreg',str(i)])] = talib.LINEARREG(
+def LINEARREG(data):
+    for i in param['LINEARREG']['timeperiod']:
+        data['_'.join(['LINEARREG',str(i)])] = talib.LINEARREG(
                                                     data[EXT_Bar_Close].values,
                                                     timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def linearreg_angle(data):
-    for i in param['linearreg_angle']['timeperiod']:
-        data['_'.join(['linearreg_angle',str(i)])] \
+def LINEARREG_ANGLE(data):
+    for i in param['LINEARREG_ANGLE']['timeperiod']:
+        data['_'.join(['LINEARREG_ANGLE',str(i)])] \
             = talib.LINEARREG_ANGLE(data[EXT_Bar_Close].values,timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def linearreg_intercept(data):
-    for i in param['linearreg_intercept']['timeperiod']:
-        data['_'.join(['linearreg_intercept',str(i)])] \
+def LINEARREG_INTERCEPT(data):
+    for i in param['LINEARREG_INTERCEPT']['timeperiod']:
+        data['_'.join(['LINEARREG_INTERCEPT',str(i)])] \
             = talib.LINEARREG_INTERCEPT(data[EXT_Bar_Close].values,
                                         timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def linearreg_slope(data):
-    for i in param['linearreg_slope']['timeperiod']:
-        data['_'.join(['linearreg_slope',str(i)])] \
+def LINEARREG_SLOPE(data):
+    for i in param['LINEARREG_SLOPE']['timeperiod']:
+        data['_'.join(['LINEARREG_SLOPE',str(i)])] \
             = talib.LINEARREG_SLOPE(data[EXT_Bar_Close].values,timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def stddev(data):
-    for i in param['stddev']['timeperiod']:
-        for j in param['stddev']['nbdev']:
-            data['_'.join(['stddev',str(i),str(j)])] \
+def STDDEV(data):
+    for i in param['STDDEV']['timeperiod']:
+        for j in param['STDDEV']['nbdev']:
+            data['_'.join(['STDDEV',str(i),str(j)])] \
                 = talib.STDDEV(data[EXT_Bar_Close].values,
                                timeperiod = i, nbdev = j)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def tsf(data):
-    for i in param['tsf']['timeperiod']:
-        data['_'.join(['tsf',str(i)])] = talib.TSF(data[EXT_Bar_Close].values,
+def TSF(data):
+    for i in param['TSF']['timeperiod']:
+        data['_'.join(['TSF',str(i)])] = talib.TSF(data[EXT_Bar_Close].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def var(data):
-    for i in param['var']['timeperiod']:
-        for j in param['var']['nbdev']:
+def VAR(data):
+    for i in param['VAR']['timeperiod']:
+        for j in param['VAR']['nbdev']:
             data['_'.join(['stddev',str(i),str(j)])] \
                 = talib.VAR(data[EXT_Bar_Close].values,
                             timeperiod = i, nbdev = j)
@@ -646,151 +651,151 @@ def var(data):
 # -----------------------TA_Lib documents Page 7------------------------------
 # ----------------------------Math Transform----------------------------------
 
-def acos(data):
-    data['acos'] = talib.ACOS(data[EXT_Bar_Close].values)
+def ACOS(data):
+    data['ACOS'] = talib.ACOS(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def asin(data):
-    data['asin'] = talib.ASIN(data[EXT_Bar_Close].values)
+def ASIN(data):
+    data['ASIN'] = talib.ASIN(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def atan(data):
-    data['atan'] = talib.ATAN(data[EXT_Bar_Close].values)
+def ATAN(data):
+    data['ATAN'] = talib.ATAN(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def ceil(data):
-    data['ceil'] = talib.CEIL(data[EXT_Bar_Close].values)
+def CEIL(data):
+    data['CEIL'] = talib.CEIL(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def cos(data):
-    data['cos'] = talib.COS(data[EXT_Bar_Close].values)
+def COS(data):
+    data['COS'] = talib.COS(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def cosh(data):
-    data['cosh'] = talib.COSH(data[EXT_Bar_Close].values)
+def COSH(data):
+    data['COSH'] = talib.COSH(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def exp(data):
-    data['exp'] = talib.EXP(data[EXT_Bar_Close].values)
+def EXP(data):
+    data['EXP'] = talib.EXP(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def floor(data):
-    data['floor'] = talib.FLOOR(data[EXT_Bar_Close].values)
+def FLOOR(data):
+    data['FLOOR'] = talib.FLOOR(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def ln(data):
-    data['ln'] = talib.LN(data[EXT_Bar_Close].values)
+def LN(data):
+    data['LN'] = talib.LN(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def log10(data):
-    data['log10'] = talib.LOG10(data[EXT_Bar_Close].values)
+def LOG10(data):
+    data['LOG10'] = talib.LOG10(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def sin(data):
-    data['sin'] = talib.SIN(data[EXT_Bar_Close].values)
+def SIN(data):
+    data['SIN'] = talib.SIN(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def sinh(data):
-    data['sinh'] = talib.SINH(data[EXT_Bar_Close].values)
+def SINH(data):
+    data['SINH'] = talib.SINH(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def sqrt(data):
-    data['sqrt'] = talib.SQRT(data[EXT_Bar_Close].values)
+def SQRT(data):
+    data['SQRT'] = talib.SQRT(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def tan(data):
-    data['tan'] = talib.TAN(data[EXT_Bar_Close].values)
+def TAN(data):
+    data['TAN'] = talib.TAN(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def tanh(data):
-    data['tanh'] = talib.TANH(data[EXT_Bar_Close].values)
+def TANH(data):
+    data['TANH'] = talib.TANH(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
 # -----------------------TA_Lib documents Page 8------------------------------
 # ----------------------------Math Operators----------------------------------
 
-def add(data):
-    data['add'] = talib.ADD(data[EXT_Bar_High].values, data[EXT_Bar_Low].values)
+def ADD(data):
+    data['ADD'] = talib.ADD(data[EXT_Bar_High].values, data[EXT_Bar_Low].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def div(data):
-    data['div'] = talib.DIV(data[EXT_Bar_High].values, data[EXT_Bar_Low].values)
+def DIV(data):
+    data['DIV'] = talib.DIV(data[EXT_Bar_High].values, data[EXT_Bar_Low].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def max(data):
-    for i in param['max']['timeperiod']:
-        data['_'.join(['max',str(i)])] = talib.MAX(data[EXT_Bar_Close].values,
+def MAX(data):
+    for i in param['MAX']['timeperiod']:
+        data['_'.join(['MAX',str(i)])] = talib.MAX(data[EXT_Bar_Close].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def maxindex(data):
-    for i in param['maxindex']['timeperiod']:
-        data['_'.join(['maxindex',str(i)])] = talib.MAXINDEX(
+def MAXINDEX(data):
+    for i in param['MAXINDEX']['timeperiod']:
+        data['_'.join(['MAXINDEX',str(i)])] = talib.MAXINDEX(
                                                 data[EXT_Bar_Close].values,
                                                 timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def min(data):
-    for i in param['min']['timeperiod']:
-        data['_'.join(['min',str(i)])] = talib.MIN(data[EXT_Bar_Close].values,
+def MIN(data):
+    for i in param['MIN']['timeperiod']:
+        data['_'.join(['MIN',str(i)])] = talib.MIN(data[EXT_Bar_Close].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def minindex(data):
-    for i in param['minindex']['timeperiod']:
-        data['_'.join(['minindex',str(i)])] = talib.MININDEX(
+def MININDEX(data):
+    for i in param['MININDEX']['timeperiod']:
+        data['_'.join(['MININDEX',str(i)])] = talib.MININDEX(
                                                 data[EXT_Bar_Close].values,
                                                 timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def minmax(data):
-    for i in param['minmax']['timeperiod']:
+def MINMAX(data):
+    for i in param['MINMAX']['timeperiod']:
         data['_'.join(['min',str(i)])], data['_'.join(['max',str(i)])]  \
-            = talib.MININDEX(data[EXT_Bar_Close].values, timeperiod = i)
+            = talib.MINMAX(data[EXT_Bar_Close].values, timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def minmaxindex(data):
-    for i in param['minmaxindex']['timeperiod']:
+def MINMAXINDEX(data):
+    for i in param['MINMAXINDEX']['timeperiod']:
         data['_'.join(['minidx',str(i)])], data['_'.join(['maxidx',str(i)])]  \
             = talib.MINMAXINDEX(data[EXT_Bar_Close].values, timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def mult(data):
-    data['mult'] = talib.MULT(data[EXT_Bar_High].values, data[EXT_Bar_Low].values)
+def MULT(data):
+    data['MULT'] = talib.MULT(data[EXT_Bar_High].values, data[EXT_Bar_Low].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def sub(data):
-    data['sub'] = talib.SUB(data[EXT_Bar_High].values, data[EXT_Bar_Low].values)
+def SUB(data):
+    data['SUB'] = talib.SUB(data[EXT_Bar_High].values, data[EXT_Bar_Low].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
-def sum(data):
-    for i in param['sum']['timeperiod']:
-        data['_'.join(['sum',str(i)])] = talib.SUM(data[EXT_Bar_Close].values,
+def SUM(data):
+    for i in param['SUM']['timeperiod']:
+        data['_'.join(['SUM',str(i)])] = talib.SUM(data[EXT_Bar_Close].values,
                                                    timeperiod = i)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
