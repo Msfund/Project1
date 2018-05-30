@@ -19,14 +19,14 @@ def find_active_asset(asset_list):
     for excode,symbol in asset_list.items():
         for i in range(len(symbol)):
             rawdata = hdf.hdfRead(EXT_Hdf_Path,excode,symbol[i],'Rawdata',None,'1d',startdate=EXT_Start,enddate=EXT_End)
-            #rawdata = x.copy()
+            ###排序规则：在整个样本期内，20天日均成交量为基准
             rawdata = rawdata.reset_index().sort_values(by = EXT_Out_Date, ascending = 1)
             rawdata = rawdata.groupby(EXT_Out_Date).sum()
             rawdata[EXT_Bar_Volume] = talib.MA(rawdata[EXT_Bar_Volume].values,timeperiod=20)
             compari_all.append([excode,symbol[i],rawdata[EXT_Bar_Volume].mean()])
     # sort_by_value
     compari_all.sort(key=lambda x:x[2],reverse=True)
-    return compari_all
+    return compari_all[0:10]
 
 def Ind_Stability(data,excode,Asset):
     '''
@@ -82,7 +82,7 @@ def Ind_Eff(data,excode,Asset, mode = 'prod'):
                 ax.plot(df)
                 ax.set_xlabel(i,fontsize = 10/6.0*MaxPlotNum)
                 ax.tick_params(labelsize=8/6.0*MaxPlotNum)
-                ax.set_title('Cumulative return orderd by Ind_'+i)
+                ax.set_title('Cum_return orderd by Ind_'+i)
                 xlabels = ax.get_xticklabels()
                 #ax.suptitle()
                 for xl in xlabels:
@@ -94,14 +94,13 @@ def Ind_Eff(data,excode,Asset, mode = 'prod'):
                 ts = ts.sort_values(by = EXT_Bar_Date).set_index([EXT_Bar_Date])
                 j = j+1
                 ax = plt.subplot(MaxPlotNum,2,j)
-                ax.plot(ts)
+                ax.plot(ts,marker='o', markersize = 1.3,linewidth = 1)
                 ax.set_xlabel('Date',fontsize = 10/6.0*MaxPlotNum)
                 ax.tick_params(labelsize=8/6.0*MaxPlotNum)
                 ax.set_title('TimeSeries of Ind_'+i)
                 xlabels = ax.get_xticklabels()
                 for xl in xlabels:
                     xl.set_rotation(30) #把x轴上的label旋转15度,以免太密集时有重叠
-                ax.set_ylabel(i,fontsize = 10/6.0*MaxPlotNum)
             f.tight_layout()
             if (j % (MaxPlotNum*2) == 0 and j !=0):
                 f.tight_layout()
@@ -126,6 +125,8 @@ if __name__ =='__main__':
     asset_list[EXT_EXCHANGE_SHFE] = EXT_SHFE_ALL
     asset_list[EXT_EXCHANGE_DCE] = EXT_DCE_ALL
     #asset_list[EXT_EXCHANGE_CZCE] = EXT_CZCE_ALL
+    #按照交易量由高至低排列，得到排序后的active_asset
+    ##排序规则：在整个样本期内，20天日均成交量为基准
     active_asset = find_active_asset(asset_list)
     list_Ind = param['Ind_func'] #技术指标列表
     for i in range(len(active_asset)):
@@ -136,7 +137,7 @@ if __name__ =='__main__':
         mode = 'prod'
         All_Ind = pd.DataFrame([])
         for Ind_func in list_Ind:
-            Ind_temp = globals().get(Ind_func)(df)
+            Ind_temp = globals().get(Ind_func)(df.copy())
             if All_Ind.size == 0:
                 All_Ind = Ind_temp
             else:

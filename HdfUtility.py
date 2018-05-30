@@ -44,11 +44,11 @@ class HdfUtility:
         # 读Indicator：       kind1='Indicator',kind2='Indicator_name',kind3=None
         store = HDFStore(path,mode = 'r')
         if kind1 == EXT_Rawdata:
-            key = '/'.join([kind1,excode,symbol,kind3])
+            key = kind1+'/'+excode+'/'+symbol+'/'+kind3
         elif kind1 == EXT_Stitch:
-            key = '/'.join([kind1,excode,symbol,EXT_Rule,kind2]) if kind3 == None else '/'.join([kind1,excode,symbol,EXT_Period,kind3,kind2])
+            key = kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
         elif kind1 == EXT_Indicator:
-            key = '/'.join([kind1,excode,symbol,kind2])
+            key = kind1+'/'+excode+'/'+symbol+kind2
         else:
             print("kind not supported")
             return
@@ -71,11 +71,11 @@ class HdfUtility:
         # 写Indicator：       kind1='Indicator',kind2='Indicator_name',kind3='params'
         store = HDFStore(path,mode='a')
         if kind1 == EXT_Rawdata:
-            key = '/'.join([kind1,excode,symbol,kind3])
+            key = kind1+'/'+excode+'/'+symbol+'/'+kind3
         elif kind1 == EXT_Stitch:
-            key = '/'.join([kind1,excode,symbol,EXT_Rule,kind2]) if kind3 == None else '/'.join([kind1,excode,symbol,EXT_Period,kind3,kind2])
+            key = kind1+'/'+excode+'/'+symbol+'/'+EXT_Rule+'/'+kind2 if kind3 == None else kind1+'/'+excode+'/'+symbol+'/'+EXT_Period+'/'+kind3+'/'+kind2
         elif kind1 == EXT_Indicator:
-            key = '/'.join([kind1,excode,symbol,kind2])
+            key = kind1+'/'+excode+'/'+symbol+kind2
         else:
             print("kind not supported")
             return
@@ -103,7 +103,7 @@ class HdfUtility:
                 store[key] = indata
             else:
                 adddata = indata[~indata.index.isin(store[key].index)]
-                if kind2 in [EXT_Series_00,EXT_Series_01]:
+                if kind2 in [EXT_Series_00,EXT_Series_01] and adddata.size !=0:
                     adddata[EXT_Out_AdjFactor] = adddata[EXT_Out_AdjFactor]*store[key][EXT_Out_AdjFactor].iloc[-1]/adddata[EXT_Out_AdjFactor].iloc[0]
                 store.append(key,adddata)
             store.close()

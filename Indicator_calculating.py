@@ -12,9 +12,9 @@ def BBANDS(data):
         for j in param['BBANDS']['nbdevup']:
             for k in param['BBANDS']['nbdevdn']:
                 for l in param['BBANDS']['matype']:
-                    data['_'.join(['BBANDS_UPPERBAND',str(i),str(j),str(k),str(l)])], \
-                    data['_'.join(['BBANDS_MIDDLEBAND',str(i),str(j),str(k),str(l)])], \
-                    data['_'.join(['BBANDS_LOWERBAND',str(i),str(j),str(k),str(l)])] \
+                    data['_'.join(['BBANDS_upperband',str(i),str(j),str(k),str(l)])], \
+                    data['_'.join(['BBANDS_middleband',str(i),str(j),str(k),str(l)])], \
+                    data['_'.join(['BBANDS_lowerband',str(i),str(j),str(k),str(l)])] \
                         = talib.BBANDS(data[EXT_Bar_Close].values, timeperiod = i,
                                        nbdevup = j, nbdevdn = k, matype = l)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
@@ -496,13 +496,13 @@ def HT_DCPHASE(data):
     return data
 
 def HT_PHASOR(data):
-    data['inphase'], data['quadrature'] = talib.HT_PHASOR(
+    data['INPHASE'], data['QUADRATURE'] = talib.HT_PHASOR(
                                             data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 
 def HT_SINE(data):
-    data['sine'], data['leadsine'] = talib.HT_SINE(data[EXT_Bar_Close].values)
+    data['SINE'], data['LEADSINE'] = talib.HT_SINE(data[EXT_Bar_Close].values)
     data.drop(EXT_Del_Header.split(','),axis=1,inplace=True)
     return data
 

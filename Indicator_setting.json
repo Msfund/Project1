@@ -1,19 +1,9 @@
 {
-    "Ind_func":
-        ["BBANDS", "DEMA", "EMA", "HT_TRENDLINE", "KAMA", "MA",
-        "MIDPOINT", "MIDPRICE", "SAR", "SAREXT", "SMA", "T3", "TEMA",
-        "TRIMA", "WMA", "ADX", "ADXR", "APO", "AROON", "AROONOSC", "BOP",
-        "CCI", "DX", "MACD", "MACDEXT", "MACDFIX", "MFI", "MINUS_DI",
-        "MINUS_DM", "MOM", "PLUS_DI", "PLUS_DM", "PPO", "ROC", "ROCP",
-        "ROCR", "ROCR100","RSI", "STOCH", "STOCHF", "TRIX", "ULTOSC", "WILLR",
-        "AD", "ADOSC", "OBV", "HT_DCPERIOD", "HT_DCPHASE", "HT_PHASOR",
-        "HT_SINE", "HT_TRENDMODE", "AVGPRICE", "MEDPRICE", "TYPPRICE",
-        "WCLPRICE", "ATR", "NATR", "TRANGE", "BETA", "CORREL", "LINEARREG",
-        "LINEARREG_ANGLE", "LINEARREG_INTERCEPT", "LINEARREG_SLOPE", "STDDEV",
-        "TSF", "VAR", "ATAN", "CEIL", "COS",
-        "FLOOR", "LN", "LOG10", "SIN",  "SQRT", "TAN", "ADD",
-        "DIV", "MAX", "MAXINDEX", "MIN", "MININDEX", "MINMAX", "MINMAXINDEX",
-        "MULT", "SUB", "SUM"],
+    "Ind_func": 
+        ["BBANDS", "EMA", "MA",
+        "ADX", "MACD",
+        "RSI",
+        "AD", "OBV"],
     "BBANDS":
         {
         "timeperiod":[5, 10, 15, 20],
@@ -31,8 +21,8 @@
         {
         "timeperiod": [2, 3, 5, 7, 10, 15, 20, 30, 40, 50, 70, 90,100],
         "matype": [0]
-        },
-    "MAMA":
+        }, 
+    "MAMA": 
         {
         "fastlimit":[0.5],
         "slowlimit":[0.5]
@@ -172,7 +162,7 @@
         "slowperiod":[10]
         },
     "OBV":
-        {},
+        {},        
     "HT_DCPERIOD":
         {},
     "HT_DCPHASE":
@@ -368,7 +358,7 @@
     "SINH":
         {},
     "SQRT":
-        {},
+        {}, 
     "TAN":
         {},
     "TANH":
